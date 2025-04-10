@@ -13,6 +13,6 @@ app.use(bodyParser.json());
 const userRoutes = require('./routes/userRoutes');
 app.use('/api', userRoutes);
 //Servidor
-app.listen(port, () => {
+app.listen(port, '127.0.0.1', () => {
   console.log(`Servidor corriendo en http://localhost:${port}`);
 });
