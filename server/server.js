@@ -17,4 +17,4 @@ app.listen(port, '127.0.0.1', () => {
   console.log(`Servidor corriendo en http://localhost:${port}`);
 });
 
-/*El 127.0.0.1 es para que corra de forma local y otros dispositivos no se puedan conectar, si no me equivoco*/
+/*El 127.0.0.1 es para que corra de forma local y otros dispositivos no se puedan conectar, tener en cuenta*/
