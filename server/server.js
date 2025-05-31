@@ -12,9 +12,18 @@ app.use(bodyParser.json());
 
 const userRoutes = require('./routes/userRoutes');
 app.use('/api', userRoutes);
+
+const courseRoutes = require('./routes/courseRoutes');
+app.use('/api', courseRoutes);
+
+
 //Servidor
-app.listen(port, '127.0.0.1', () => {
+app.listen(port, () => {
   console.log(`Servidor corriendo en http://localhost:${port}`);
 });
 
-/*El 127.0.0.1 es para que corra de forma local y otros dispositivos no se puedan conectar, tener en cuenta*/
+app.get('/', (req, res) => {
+  res.send('Servidor funcionando');
+});
+
+/*El 127.0.0.1 es para que corra de forma local y otros dispositivos no se puedan conectar, tener en cuenta*/ 

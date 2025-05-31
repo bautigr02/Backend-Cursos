@@ -1,4 +1,4 @@
-const db = require('../models/userModel');
+const db = require('../models/db');
 
 // Formulario Register
 const createAlumno = (req, res) => {
