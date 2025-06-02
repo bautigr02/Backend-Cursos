@@ -16,6 +16,9 @@ app.use('/api', userRoutes);
 const courseRoutes = require('./routes/courseRoutes');
 app.use('/api', courseRoutes);
 
+const workshopRoutes = require('./routes/workshopRoutes');
+app.use('/api', workshopRoutes);
+
 
 //Servidor
 app.listen(port, () => {
