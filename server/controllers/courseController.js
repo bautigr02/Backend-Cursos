@@ -50,7 +50,7 @@ const deleteCurso = (req, res) => {
 // PUT (actualizar todo el curso)
 const putCurso = (req, res) => {
   const { id } = req.params;
-  const { nom_curso, fec_ini, fec_fin, estado, num_aula, dni_docente } = req.body;
+  const { nom_curso, fec_ini, fec_fin, estado, num_aula, dni_docente, descripcion, imagen } = req.body;
   if (!nom_curso || !fec_ini || !fec_fin || !estado || !num_aula || !dni_docente) {
     return res.status(400).json({ error: 'Faltan datos obligatorios' });
   }
@@ -61,7 +61,7 @@ const putCurso = (req, res) => {
   `;
   db.query(
     query,
-    [nom_curso, fec_ini, fec_fin, estado, num_aula, dni_docente, id],
+    [nom_curso, fec_ini, fec_fin, estado, num_aula, dni_docente, descripcion, imagen, id],
     (err, result) => {
       if (err) {
         console.error('Error al actualizar el curso:', err);
@@ -106,17 +106,17 @@ const patchCurso = (req, res) => {
 
 // Crear un nuevo curso
 const createCurso = (req, res) => {
-  const { nom_curso, fec_ini, fec_fin, estado, num_aula, dni_docente } = req.body;
+  const { nom_curso, fec_ini, fec_fin, estado, num_aula, dni_docente, descripcion, imagen } = req.body;
   if (!nom_curso || !fec_ini || !fec_fin || !estado || !num_aula || !dni_docente) {
     return res.status(400).json({ error: 'Faltan datos obligatorios' });
   }
-  const query = 'INSERT INTO curso (nom_curso, fec_ini, fec_fin, estado, num_aula, dni_docente) VALUES (?, ?, ?, ?, ?, ?)';
-  db.query(query, [nom_curso, fec_ini, fec_fin, estado, num_aula, dni_docente], (err, result) => {
+  const query = 'INSERT INTO curso (nom_curso, fec_ini, fec_fin, estado, num_aula, dni_docente, descripcion, imagen) VALUES (?, ?, ?, ?, ?, ?)';
+  db.query(query, [nom_curso, fec_ini, fec_fin, estado, num_aula, dni_docente, descripcion, imagen], (err, result) => {
     if (err) {
       console.error('Error al crear el curso:', err);
       return res.status(500).json({ error: 'Error al crear el curso' });
     }
-    res.status(201).json({ id: result.insertId, nom_curso, fec_ini, fec_fin, estado, num_aula, dni_docente });
+    res.status(201).json({ id: result.insertId, nom_curso, fec_ini, fec_fin, estado, num_aula, dni_docente, descripcion, imagen });
     console.log('Curso creado correctamente con ID:', result.insertId);
   });
 };
