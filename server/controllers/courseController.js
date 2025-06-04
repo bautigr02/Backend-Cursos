@@ -2,7 +2,7 @@ const db = require('../models/db');
 
 // GET ALL
 const getCursos = (req, res) => {
-  const query = 'SELECT * FROM curso';
+  const query = 'SELECT curso.*, aula.cant_alumnos FROM curso JOIN aula ON curso.num_aula = aula.num_aula';
   db.query(query, (err, results) => {
     if (err) {
       console.error('Error al obtener cursos:', err);
