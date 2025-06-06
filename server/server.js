@@ -13,6 +13,9 @@ app.use(bodyParser.json());
 const userRoutes = require('./routes/userRoutes');
 app.use('/api', userRoutes);
 
+const teacherRoutes = require('./routes/teacherRoutes');
+app.use('/api', teacherRoutes);
+
 const courseRoutes = require('./routes/courseRoutes');
 app.use('/api', courseRoutes);
 
