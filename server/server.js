@@ -13,16 +13,20 @@ app.use(bodyParser.json());
 const userRoutes = require('./routes/userRoutes');
 app.use('/api', userRoutes);
 
-const teacherRoutes = require('./routes/teacherRoutes');
-app.use('/api', teacherRoutes);
+const courseRoutes = require('./routes/courseRoutes');
+app.use('/api', courseRoutes);
+
+const workshopRoutes = require('./routes/workshopRoutes');
+app.use('/api', workshopRoutes);
+
+
 //Servidor
-app.listen(port, '127.0.0.1', () => {
+app.listen(port, () => {
   console.log(`Servidor corriendo en http://localhost:${port}`);
 });
 
-/*El '127.0.0.1' es para que corra de forma local y otros dispositivos no se puedan conectar, tener en cuenta*/
-
-process.on('SIGINT', () => {
-  console.log('Servidor cerrado con Ctrl+C');
-  process.exit();
+app.get('/', (req, res) => {
+  res.send('Servidor funcionando');
 });
+
+/*El 127.0.0.1 es para que corra de forma local y otros dispositivos no se puedan conectar, tener en cuenta*/ 
