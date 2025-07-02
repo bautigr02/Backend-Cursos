@@ -33,14 +33,14 @@ const getDocenteByDni = (req, res) => {
 
 // CREATE docente
 const createDocente = (req, res) => {
-  const { dni, nombre, apellido, telefono, direccion, email, contraseña } = req.body;
+  const { dni, nombre, apellido, telefono, direccion, email, contrasena } = req.body;
 
   const query = `
-    INSERT INTO docente (dni, nombre, apellido, telefono, direccion, email, contraseña)
+    INSERT INTO docente (dni, nombre, apellido, telefono, direccion, email, contrasena)
     VALUES (?, ?, ?, ?, ?, ?, ?)
   `;
 
-  db.query(query, [dni, nombre, apellido, telefono, direccion, email, contraseña], (err, results) => {
+  db.query(query, [dni, nombre, apellido, telefono, direccion, email, contrasena], (err, results) => {
     if (err) {
       console.error('Error al crear docente:', err);
       return res.status(500).json({ error: 'Error al crear el docente' });
@@ -73,19 +73,19 @@ const deleteDocenteByDni = (req, res) => {
 // Actualizar datos del docente por DNI
 const updateDocente = (req, res) => {
   const dni = req.params.dni;
-  const { direccion, email, telefono, contraseña } = req.body;
+  const { direccion, email, telefono, contrasena } = req.body;
 
-  if (!direccion || !email || !telefono || !contraseña) {
+  if (!direccion || !email || !telefono || !contrasena) {
     return res.status(400).json({ error: 'Faltan campos obligatorios' });
   }
 
   const sql = `
     UPDATE docente
-    SET direccion = ?, email = ?, telefono = ?, contraseña = ?
+    SET direccion = ?, email = ?, telefono = ?, contrasena = ?
     WHERE dni = ?
   `;
 
-  const values = [direccion, email, telefono, contraseña, dni];
+  const values = [direccion, email, telefono, contrasena, dni];
 
  db.query(sql, values, (err, result) => {
     console.log('Valores enviados:', values);
