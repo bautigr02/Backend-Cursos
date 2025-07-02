@@ -140,6 +140,42 @@ const deleteAlumno = (req, res) => {
   });
 };
 
+// Controlador para obtener cursos por DNI del alumno
+const getCursosByAlumno = (req, res) => {
+  const dni = req.params.dni;
+  const sql = `
+    SELECT c.idcurso, c.nom_curso, c.descripcion, c.fec_ini, c.fec_fin, c.estado, c.imagen, i.fec_inscripcion, i.estado, i.nota_curso, i.condicion
+    FROM inscripcion_curso i
+    JOIN curso c ON i.idcurso = c.idcurso
+    WHERE i.dni = ?
+  `;
+  db.query(sql, [dni], (err, results) => {
+    if (err) {
+      console.error('Error al obtener cursos del alumno:', err);
+      return res.status(500).json({ error: 'Error en el servidor' });
+    }
+    res.status(200).json(results);
+  });
+};
+
+// Controlador para obtener talleres por DNI del alumno
+const getTalleresByAlumno = (req, res) => {
+  const dni = req.params.dni;
+  const sql = `
+    SELECT t.idtaller, t.nom_taller, t.fecha, t.tematica, t.herramienta, t.hora_ini, t.requisitos, t.dificultad, t.dni_docente, t.imagen, t.idcurso, it.fec_inscripcion, it.estado, it.nota_taller
+    FROM inscripcion_taller it
+    JOIN taller t ON it.idtaller = t.idtaller
+    WHERE it.dni = ?
+  `;
+  db.query(sql, [dni], (err, results) => {
+    if (err) {
+      console.error('Error al obtener talleres del alumno:', err);
+      return res.status(500).json({ error: 'Error en el servidor' });
+    }
+    res.status(200).json(results);
+  });
+};
+
 // Exportar las funciones del controlador
 module.exports = {
   createAlumno,
@@ -147,4 +183,6 @@ module.exports = {
   updateAlumno,
   getAlumnoByDni,
   deleteAlumno,
+  getCursosByAlumno,
+  getTalleresByAlumno
 };
