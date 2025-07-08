@@ -1,6 +1,0 @@
-<div *ngFor="let workshop of workshopList" [routerLink]="['/workshops', workshop.id]" class="workshop-card">
-  <img src={{workshop.imageUrl}} alt="imagen-taller">
-  <h2>{{workshop.title}}</h2>
-  <h3 [ngStyle]="{'color':getDifficultyColor(workshop.difficulty)}" >{{ getDifficultyLabel(workshop.difficulty) }}</h3>
-  <p>{{workshop.date}}</p>
-</div>
