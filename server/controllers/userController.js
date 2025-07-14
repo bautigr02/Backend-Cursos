@@ -62,7 +62,13 @@ const loginAlumno = (req, res) => {
       return res.status(400).json({ error: 'contrasena incorrecta' });
     }
     res.status(200).json({ message: 'Login exitoso',
-      user: { dni: alumno.dni}
+      user: { dni: alumno.dni,
+      nombre: alumno.nombre_alumno,
+      apellido: alumno.apellido_alumno,
+      telefono: alumno.telefono,
+      direccion: alumno.direccion,
+      email: alumno.email,
+      fecha_nacimiento: alumno.fecha_nacimiento}
      });
   });
 };

@@ -26,7 +26,13 @@ const loginDocente = (req, res) => {
       return res.status(400).json({ error: 'contrasena incorrecta' });
     }
     res.status(200).json({ message: 'Login exitoso',
-      user: { dni: docente.dni}
+      user: { dni: docente.dni,
+      nombre: docente.nombre,
+      apellido: docente.apellido,
+      telefono: docente.telefono,
+      direccion: docente.direccion,
+      email: docente.email,
+      fecha_nacimiento: docente.fecha_nacimiento}
      });
   });
 };
@@ -133,6 +139,23 @@ const updateDocente = (req, res) => {
   });
 };
 
+//get all courses by docente dni
+const getCoursesByDocenteDni = (req, res) => {
+  const { dni } = req.params;
+  const query = 'Select * from curso where dni_docente = ?' ;
+  db.query(query, [dni], (err, results) => {
+    if (err) {
+      console.error('Error al obtener cursos por DNI del docente:', err);
+      return res.status(500).json({ error: 'Error al obtener los cursos' });
+    }
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'No se encontraron cursos para el docente' });
+    }
+    res.status(200).json(results);
+    console.log('Cursos obtenidos correctamente por DNI del docente');
+  });
+};
+
 module.exports = {
   loginDocente,
   getDocentes,
@@ -140,4 +163,5 @@ module.exports = {
     createDocente,
     deleteDocenteByDni,
   updateDocente,
+  getCoursesByDocenteDni,
 };
