@@ -1,4 +1,4 @@
-const db = require('../models/userModel');
+const db = require('../models/db');
 
 //Obtener docente a partir del login
 const loginDocente = (req, res) => {
