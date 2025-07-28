@@ -142,7 +142,7 @@ const updateDocente = (req, res) => {
 //get all courses by docente dni
 const getCoursesByDocenteDni = (req, res) => {
   const { dni } = req.params;
-  const query = 'Select * from curso where dni_docente = ?' ;
+  const query = 'Select nom_curso, num_aula from curso where dni_docente = ?' ;
   db.query(query, [dni], (err, results) => {
     if (err) {
       console.error('Error al obtener cursos por DNI del docente:', err);
