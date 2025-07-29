@@ -142,7 +142,7 @@ const updateDocente = (req, res) => {
 //get all courses by docente dni
 const getCoursesByDocenteDni = (req, res) => {
   const { dni } = req.params;
-  const query = 'Select nom_curso, num_aula from curso where dni_docente = ?' ;
+  const query = 'Select idcurso, nom_curso, num_aula from curso where dni_docente = ?' ;
   db.query(query, [dni], (err, results) => {
     if (err) {
       console.error('Error al obtener cursos por DNI del docente:', err);
@@ -156,6 +156,23 @@ const getCoursesByDocenteDni = (req, res) => {
   });
 };
 
+//get all talleres by curso id
+const getTalleresByCursoId = (req, res) => {
+  const {idcurso} = req.params;
+  const query = "Select Nom_taller, fecha, hora_ini from taller where idcurso = ?";
+  db.query(query, [idcurso], (err, results) => {
+    if (err) {
+      console.error('Error al obtener talleres por ID de curso:', err);
+      return res.status(500).json({ error: 'Error al obtener los talleres' });
+    }
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'No se encontraron talleres para el curso' });
+    }
+    res.status(200).json(results);
+    console.log('Talleres obtenidos correctamente por ID de curso');
+  });
+};
+
 module.exports = {
   loginDocente,
   getDocentes,
@@ -164,4 +181,5 @@ module.exports = {
     deleteDocenteByDni,
   updateDocente,
   getCoursesByDocenteDni,
+  getTalleresByCursoId,
 };
