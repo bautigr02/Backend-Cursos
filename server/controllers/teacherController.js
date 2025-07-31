@@ -139,6 +139,64 @@ const updateDocente = (req, res) => {
   });
 };
 
+// Actualizar datos del alumno - patch
+const updateDocentePatch = (req, res) => {
+  const dni = req.params.dni;
+  const { nombre, apellido, direccion, email, telefono, contrasena } = req.body;
+
+  if (!nombre && !apellido && !direccion && !email && !telefono && !contrasena) {
+    return res.status(400).json({ error: 'No se proporcionaron campos para actualizar' });
+  }
+
+  const updates = [];
+  const values = [];
+  if (nombre) {
+    updates.push('nombre = ?');
+    values.push(nombre);
+  }
+  if (apellido) {
+    updates.push('apellido = ?');
+    values.push(apellido);
+  }
+  if (direccion) {
+    updates.push('direccion = ?');
+    values.push(direccion);
+  }
+  if (email) {
+    updates.push('email = ?');
+    values.push(email);
+  }
+  if (telefono) {
+    updates.push('telefono = ?');
+    values.push(telefono);
+  }
+  if (contrasena) {
+    updates.push('contrasena = ?');
+    values.push(contrasena);
+  }
+
+  values.push(dni);
+
+  const sql = `
+    UPDATE Docente
+    SET ${updates.join(', ')}
+    WHERE dni = ?
+  `;
+
+  db.query(sql, values, (err, result) => {
+    if (err) {
+      console.error('Error al actualizar Docente:', err);
+      return res.status(500).json({ error: 'Error en el servidor' });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ mensaje: 'Docente no encontrado' });
+    }
+
+    res.status(200).json({ mensaje: 'Docente actualizado correctamente' });
+  });
+};
+
 //get all courses by docente dni
 const getCoursesByDocenteDni = (req, res) => {
   const { dni } = req.params;
@@ -180,6 +238,7 @@ module.exports = {
     createDocente,
     deleteDocenteByDni,
   updateDocente,
+  updateDocentePatch,
   getCoursesByDocenteDni,
   getTalleresByCursoId,
 };

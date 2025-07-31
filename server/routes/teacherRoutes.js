@@ -9,6 +9,7 @@ router.get('/docente/:dni', teacherController.getDocenteByDni);
 router.post('/docente', teacherController.createDocente);
 router.delete('/docente/:dni', teacherController.deleteDocenteByDni);
 router.put('/docente/:dni', teacherController.updateDocente);
+router.patch('/docente/:dni', teacherController.updateDocentePatch);
 router.get('/docente/cursos/:dni', teacherController.getCoursesByDocenteDni);
 router.get('/docente/cursos/talleres/:idcurso', teacherController.getTalleresByCursoId);
 module.exports = router;
