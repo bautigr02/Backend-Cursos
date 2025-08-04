@@ -2,7 +2,7 @@ const db = require('../models/db');
 
 // GET ALL
 const getCursos = (req, res) => {
-  const query = 'SELECT curso.*, aula.cant_alumnos FROM curso JOIN aula ON curso.num_aula = aula.num_aula';
+  const query = 'SELECT curso.*, aula.cant_alumnos, (SELECT COUNT(*) FROM inscripcion_curso i WHERE i.idcurso = curso.idcurso) AS cantidad_inscriptos FROM curso JOIN aula ON curso.num_aula = aula.num_aula';
   db.query(query, (err, results) => {
     if (err) {
       console.error('Error al obtener cursos:', err);
@@ -121,4 +121,4 @@ const createCurso = (req, res) => {
   });
 };
 
-module.exports = { getCursos, getCursoById, createCurso, deleteCurso, putCurso, patchCurso };
+module.exports = { getCursos, getCursoById, createCurso, deleteCurso, putCurso, patchCurso};
