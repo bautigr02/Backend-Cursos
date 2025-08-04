@@ -223,6 +223,27 @@ const getCursosByAlumno = (req, res) => {
   });
 };
 
+// Controlador para cancelar inscripción a un curso (Cambiar estado a "3")
+const cancelarInscripcionCurso = (req, res) => {
+  const { dni, idcurso } = req.params;
+
+  const sql = `UPDATE inscripcion_curso SET estado = 3, nota_curso = NULL WHERE dni = ? AND idcurso = ?`;
+
+  db.query(sql, [dni, idcurso], (err, result) => {
+    if (err) {
+      console.error('Error al cancelar inscripción al curso:', err);
+      return res.status(500).json({ error: 'Error en el servidor' });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ mensaje: 'Inscripción no encontrada o ya cancelada' });
+    }
+
+    res.status(200).json({ mensaje: 'Inscripción cancelada correctamente' });
+  });
+};
+
+
 // Controlador para obtener talleres por DNI del alumno
 const getTalleresByAlumno = (req, res) => {
   const dni = req.params.dni;
@@ -250,5 +271,6 @@ module.exports = {
   getAlumnoByDni,
   deleteAlumno,
   getCursosByAlumno,
+  cancelarInscripcionCurso,
   getTalleresByAlumno
 };

@@ -7,6 +7,7 @@ const { updateAlumnoPatch } = require('../controllers/userController');
 const { getAlumnoByDni } = require('../controllers/userController');
 const { deleteAlumno } = require('../controllers/userController');
 const { getCursosByAlumno } = require('../controllers/userController');
+const { cancelarInscripcionCurso } = require('../controllers/userController');
 const { getTalleresByAlumno } = require('../controllers/userController');
 
 router.post('/login', loginAlumno);
@@ -16,5 +17,6 @@ router.patch('/alumno/:dni', updateAlumnoPatch);
 router.get('/alumno/:dni', getAlumnoByDni);
 router.delete('/alumno/:dni', deleteAlumno);
 router.get('/alumno/:dni/cursos', getCursosByAlumno);
+router.patch('/inscripcion_curso/:dni/:idcurso', cancelarInscripcionCurso);
 router.get('/alumno/:dni/talleres', getTalleresByAlumno);
 module.exports = router;
