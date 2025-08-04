@@ -209,9 +209,10 @@ const deleteAlumno = (req, res) => {
 const getCursosByAlumno = (req, res) => {
   const dni = req.params.dni;
   const sql = `
-    SELECT c.idcurso, c.nom_curso, c.descripcion, c.fec_ini, c.fec_fin, c.estado, c.imagen, i.fec_inscripcion, i.estado, i.nota_curso
+    SELECT c.idcurso, c.nom_curso, c.descripcion, c.fec_ini, c.fec_fin, c.estado, c.imagen, i.fec_inscripcion, i.estado, i.nota_curso, d.nombre AS nombre_docente, d.apellido AS apellido_docente
     FROM inscripcion_curso i
     JOIN curso c ON i.idcurso = c.idcurso
+    JOIN docente d ON c.dni_docente = d.dni
     WHERE i.dni = ?
   `;
   db.query(sql, [dni], (err, results) => {
