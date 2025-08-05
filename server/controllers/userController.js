@@ -224,6 +224,24 @@ const getCursosByAlumno = (req, res) => {
   });
 };
 
+// Controlador para obtener talleres por DNI del alumno
+const getTalleresByAlumno = (req, res) => {
+  const dni = req.params.dni;
+  const sql = `
+    SELECT t.idtaller, t.nom_taller, t.fecha, t.tematica, t.herramienta, t.hora_ini, t.requisitos, t.dificultad, t.dni_docente, t.imagen, t.idcurso, it.fec_inscripcion, it.estado, it.nota_taller
+    FROM inscripcion_taller it
+    JOIN taller t ON it.idtaller = t.idtaller
+    WHERE it.dni = ?
+  `;
+  db.query(sql, [dni], (err, results) => {
+    if (err) {
+      console.error('Error al obtener talleres del alumno:', err);
+      return res.status(500).json({ error: 'Error en el servidor' });
+    }
+    res.status(200).json(results);
+  });
+};
+
 // Controlador para cancelar inscripción a un curso (Cambiar estado a "3")
 const cancelarInscripcionCurso = (req, res) => {
   const { dni, idcurso } = req.params;
@@ -244,22 +262,19 @@ const cancelarInscripcionCurso = (req, res) => {
   });
 };
 
-
-// Controlador para obtener talleres por DNI del alumno
-const getTalleresByAlumno = (req, res) => {
-  const dni = req.params.dni;
-  const sql = `
-    SELECT t.idtaller, t.nom_taller, t.fecha, t.tematica, t.herramienta, t.hora_ini, t.requisitos, t.dificultad, t.dni_docente, t.imagen, t.idcurso, it.fec_inscripcion, it.estado, it.nota_taller
-    FROM inscripcion_taller it
-    JOIN taller t ON it.idtaller = t.idtaller
-    WHERE it.dni = ?
-  `;
-  db.query(sql, [dni], (err, results) => {
+// Controlador para inscribir alumno en un curso
+const inscribirAlumnoEnCurso = (req, res) => {
+  const { dni, idcurso } = req.body;
+  const sql = `INSERT INTO inscripcion_curso (dni, idcurso, estado, fec_inscripcion) VALUES (?, ?, 1, NOW())`;
+  db.query(sql, [dni, idcurso], (err, result) => {
     if (err) {
-      console.error('Error al obtener talleres del alumno:', err);
-      return res.status(500).json({ error: 'Error en el servidor' });
+      // Si ya existe, puedes devolver un error personalizado
+      if (err.code === 'ER_DUP_ENTRY') {
+        return res.status(400).json({ error: 'Ya estás inscripto en este curso' });
+      }
+      return res.status(500).json({ error: 'Error al inscribirse' });
     }
-    res.status(200).json(results);
+    res.status(201).json({ mensaje: 'Inscripción exitosa' });
   });
 };
 
@@ -273,5 +288,6 @@ module.exports = {
   deleteAlumno,
   getCursosByAlumno,
   cancelarInscripcionCurso,
-  getTalleresByAlumno
+  getTalleresByAlumno,
+  inscribirAlumnoEnCurso
 };
