@@ -10,6 +10,7 @@ const { getCursosByAlumno } = require('../controllers/userController');
 const { cancelarInscripcionCurso } = require('../controllers/userController');
 const { getTalleresByAlumno } = require('../controllers/userController');
 const { inscribirAlumnoEnCurso } = require('../controllers/userController');
+const { inscribirAlumnoEnTaller } = require('../controllers/userController');
 
 router.post('/login', loginAlumno);
 router.post('/alumno', createAlumno);
@@ -21,4 +22,5 @@ router.get('/alumno/:dni/cursos', getCursosByAlumno);
 router.patch('/inscripcion_curso/:dni/:idcurso', cancelarInscripcionCurso);
 router.get('/alumno/:dni/talleres', getTalleresByAlumno);
 router.post('/inscripcion_curso', inscribirAlumnoEnCurso);
+router.post('/inscripcion_taller', inscribirAlumnoEnTaller);
 module.exports = router;
