@@ -265,16 +265,34 @@ const cancelarInscripcionCurso = (req, res) => {
 // Controlador para inscribir alumno en un curso
 const inscribirAlumnoEnCurso = (req, res) => {
   const { dni, idcurso } = req.body;
-  const sql = `INSERT INTO inscripcion_curso (dni, idcurso, estado, fec_inscripcion) VALUES (?, ?, 1, NOW())`;
-  db.query(sql, [dni, idcurso], (err, result) => {
+  
+  // Primero verificar el estado del curso
+  const checkEstadoSql = 'SELECT estado FROM curso WHERE idcurso = ?';
+  db.query(checkEstadoSql, [idcurso], (err, results) => {
     if (err) {
-      // Si ya existe, puedes devolver un error personalizado
-      if (err.code === 'ER_DUP_ENTRY') {
-        return res.status(400).json({ error: 'Ya estás inscripto en este curso' });
-      }
-      return res.status(500).json({ error: 'Error al inscribirse' });
+      return res.status(500).json({ error: 'Error al verificar el curso' });
     }
-    res.status(201).json({ mensaje: 'Inscripción exitosa' });
+    
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'Curso no encontrado' });
+    }
+    
+    const estadoCurso = results[0].estado;
+    if (estadoCurso !== 1) {
+      return res.status(400).json({ error: 'No se puede inscribir. El curso no está disponible.' });
+    }
+    
+    // Si el estado es 1, proceder con la inscripción
+    const insertSql = 'INSERT INTO inscripcion_curso (dni, idcurso, estado, fec_inscripcion) VALUES (?, ?, 2, NOW())';
+    db.query(insertSql, [dni, idcurso], (err, result) => {
+      if (err) {
+        if (err.code === 'ER_DUP_ENTRY') {
+          return res.status(400).json({ error: 'Ya estás inscripto en este curso' });
+        }
+        return res.status(500).json({ error: 'Error al inscribirse' });
+      }
+      res.status(201).json({ mensaje: 'Inscripción exitosa' });
+    });
   });
 };
 
