@@ -110,7 +110,7 @@ const createCurso = (req, res) => {
   if (!nom_curso || !fec_ini || !fec_fin || !estado || !num_aula || !dni_docente) {
     return res.status(400).json({ error: 'Faltan datos obligatorios' });
   }
-  const query = 'INSERT INTO curso (nom_curso, fec_ini, fec_fin, estado, num_aula, dni_docente, descripcion, imagen) VALUES (?, ?, ?, ?, ?, ?)';
+  const query = 'INSERT INTO curso (nom_curso, fec_ini, fec_fin, estado, num_aula, dni_docente, descripcion, imagen) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
   db.query(query, [nom_curso, fec_ini, fec_fin, estado, num_aula, dni_docente, descripcion, imagen], (err, result) => {
     if (err) {
       console.error('Error al crear el curso:', err);
