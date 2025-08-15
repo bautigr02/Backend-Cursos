@@ -283,7 +283,7 @@ const inscribirAlumnoEnCurso = (req, res) => {
     }
     
     // Si el estado es 1, proceder con la inscripción
-    const insertSql = 'INSERT INTO inscripcion_curso (dni, idcurso, estado, fec_inscripcion) VALUES (?, ?, 2, NOW())';
+    const insertSql = 'INSERT INTO inscripcion_curso (dni, idcurso, estado, fec_inscripcion) VALUES (?, ?, 1, NOW())';
     db.query(insertSql, [dni, idcurso], (err, result) => {
       if (err) {
         if (err.code === 'ER_DUP_ENTRY') {
