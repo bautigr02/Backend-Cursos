@@ -262,19 +262,45 @@ const cancelarInscripcionCurso = (req, res) => {
   });
 };
 
-// Controlador para inscribir alumno en un curso
+// Controlador para inscribir alumno en un curso, si el estado actual es 3, cambiarlo a 1
 const inscribirAlumnoEnCurso = (req, res) => {
   const { dni, idcurso } = req.body;
-  const sql = `INSERT INTO inscripcion_curso (dni, idcurso, estado, fec_inscripcion) VALUES (?, ?, 1, NOW())`;
-  db.query(sql, [dni, idcurso], (err, result) => {
+
+  // Primero, verificamos si el alumno ya está inscrito en el curso
+  const checkSql = `SELECT estado FROM inscripcion_curso WHERE dni = ? AND idcurso = ?`;
+  db.query(checkSql, [dni, idcurso], (err, results) => {
     if (err) {
-      // Si ya existe, puedes devolver un error personalizado
-      if (err.code === 'ER_DUP_ENTRY') {
-        return res.status(400).json({ error: 'Ya estás inscripto en este curso' });
-      }
-      return res.status(500).json({ error: 'Error al inscribirse' });
+      console.error('Error al verificar inscripción:', err);
+      return res.status(500).json({ error: 'Error en el servidor' });
     }
-    res.status(201).json({ mensaje: 'Inscripción exitosa' });
+
+    if (results.length === 0) {
+      // Si no existe, lo inscribimos
+      const insertSql = `INSERT INTO inscripcion_curso (dni, idcurso, estado, fec_inscripcion) VALUES (?, ?, 1, NOW())`;
+      db.query(insertSql, [dni, idcurso], (err, result) => {
+        if (err) {
+          console.error('Error al inscribir alumno:', err);
+          return res.status(500).json({ error: 'Error en el servidor' });
+        }
+        return res.status(201).json({ mensaje: 'Inscripción exitosa' });
+      });
+    } else {
+      // Si existe, verificamos el estado
+      const estadoActual = results[0].estado;
+      if (estadoActual === 3) {
+        // Si el estado es 3, lo cambiamos a 1
+        const updateSql = `UPDATE inscripcion_curso SET estado = 1, fec_inscripcion = NOW() WHERE dni = ? AND idcurso = ?`;
+        db.query(updateSql, [dni, idcurso], (err, result) => {
+          if (err) {
+            console.error('Error al actualizar inscripción:', err);
+            return res.status(500).json({ error: 'Error en el servidor' });
+          }
+          return res.status(200).json({ mensaje: 'Inscripción reactivada' });
+        });
+      } else {
+        return res.status(400).json({ error: 'El alumno ya está inscrito en este curso' });
+      }
+    }
   });
 };
 
