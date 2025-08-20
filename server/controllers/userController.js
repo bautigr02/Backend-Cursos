@@ -304,6 +304,98 @@ const inscribirAlumnoEnCurso = (req, res) => {
   });
 };
 
+// Controlador para inscribir alumno en un taller. Conseguir el idcurso mediante join
+const inscribirAlumnoEnTaller = (req, res) => {
+  const { dni, idtaller } = req.body;
+  // obtenemos el idcurso del taller - Autoincremental de idtaller activado
+  const getCursoSql = `SELECT idcurso FROM taller WHERE idtaller = ?`;
+  db.query(getCursoSql, [idtaller], (err, results) => {
+    if (err) {
+      console.error('Error al obtener idcurso del taller:', err);
+      return res.status(500).json({ error: 'Error en el servidor' });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'Taller no encontrado' });
+    }
+
+    const idcurso = results[0].idcurso;
+
+    // Primero, verificamos si el alumno ya está inscrito en el taller
+    const checkSql = `SELECT estado FROM inscripcion_taller WHERE dni = ? AND idtaller = ? AND idcurso = ?`;
+    db.query(checkSql, [dni, idtaller, idcurso], (err, results) => {
+      if (err) {
+        console.error('Error al verificar inscripción:', err);
+      return res.status(500).json({ error: 'Error en el servidor' });
+    }
+
+    if (results.length === 0) {
+      // Si no existe, lo inscribimos
+      const insertSql = `INSERT INTO inscripcion_taller (dni, idtaller, idcurso, estado, fec_inscripcion) VALUES (?, ?, ?, 1, NOW())`;
+      db.query(insertSql, [dni, idtaller, idcurso], (err, result) => {
+        if (err) {
+          console.error('Error al inscribir alumno:', err);
+          return res.status(500).json({ error: 'Error en el servidor' });
+        }
+        return res.status(201).json({ mensaje: 'Inscripción exitosa' });
+      });
+    } else {
+      // Si existe, verificamos el estado
+      const estadoActual = results[0].estado;
+      if (estadoActual === 3) {
+        // Si el estado es 3, lo cambiamos a 1
+        const updateSql = `UPDATE inscripcion_taller SET estado = 1, fec_inscripcion = NOW() WHERE dni = ? AND idtaller = ? AND idcurso = ?`;
+        db.query(updateSql, [dni, idtaller, idcurso], (err, result) => {
+          if (err) {
+            console.error('Error al actualizar inscripción:', err);
+            return res.status(500).json({ error: 'Error en el servidor' });
+          }
+          return res.status(200).json({ mensaje: 'Inscripción reactivada' });
+        });
+      } else {
+        return res.status(400).json({ error: 'El alumno ya está inscrito en este taller' });
+      }
+    }
+  });
+});
+}
+
+// Controlador para cancelar inscripción a un taller (Cambiar estado a "3"). Obtener idcurso desde idtaller
+const cancelarInscripcionTaller = (req, res) => {
+  const { dni, idtaller } = req.params;
+
+  // obtenemos el idcurso del taller
+  const getCursoSql = `SELECT idcurso FROM taller WHERE idtaller = ?`;
+  db.query(getCursoSql, [idtaller], (err, results) => {
+    if (err) {
+      console.error('Error al obtener idcurso del taller:', err);
+      return res.status(500).json({ error: 'Error en el servidor' });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'Taller no encontrado' });
+    }
+
+    const idcurso = results[0].idcurso;
+
+    const sql = `UPDATE inscripcion_taller SET estado = 3, nota_taller = NULL WHERE dni = ? AND idtaller = ? AND idcurso = ?`;
+
+    db.query(sql, [dni, idtaller, idcurso], (err, result) => {
+      if (err) {
+        console.error('Error al cancelar inscripción al taller:', err);
+        return res.status(500).json({ error: 'Error en el servidor' });
+      }
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ mensaje: 'Inscripción no encontrada o ya cancelada' });
+      }
+
+      res.status(200).json({ mensaje: 'Inscripción cancelada correctamente' });
+    });
+  });
+};
+
+
 // Exportar las funciones del controlador
 module.exports = {
   createAlumno,
@@ -315,5 +407,7 @@ module.exports = {
   getCursosByAlumno,
   cancelarInscripcionCurso,
   getTalleresByAlumno,
-  inscribirAlumnoEnCurso
+  inscribirAlumnoEnCurso,
+  inscribirAlumnoEnTaller,
+  cancelarInscripcionTaller
 };
