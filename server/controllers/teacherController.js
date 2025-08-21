@@ -231,14 +231,32 @@ const getTalleresByCursoId = (req, res) => {
   });
 };
 
+//get alumnos from inscripcion_curso by curso id
+const getAlumnosByCursoId = (req, res) => {
+  const { idcurso } = req.params;
+  const query = "Select ic.dni, ic.fec_inscripcion, a.nombre_alumno, a.apellido_alumno, a.email from inscripcion_curso ic inner join alumno a on ic.dni = a.dni where ic.idcurso = ?";
+  db.query(query, [idcurso], (err, results) => {
+    if (err) {
+      console.error('Error al obtener alumnos por ID de curso:', err);
+      return res.status(500).json({ error: 'Error al obtener los alumnos' });
+    }
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'No se encontraron alumnos para el curso' });
+    }
+    res.status(200).json(results);
+    console.log('Alumnos obtenidos correctamente por ID de curso');
+  });
+};
+
 module.exports = {
   loginDocente,
   getDocentes,
   getDocenteByDni,
-    createDocente,
-    deleteDocenteByDni,
+  createDocente,
+  deleteDocenteByDni,
   updateDocente,
   updateDocentePatch,
   getCoursesByDocenteDni,
   getTalleresByCursoId,
+  getAlumnosByCursoId,
 };
