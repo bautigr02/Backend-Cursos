@@ -285,11 +285,11 @@ const insertNotaAlumno = (req, res) => {
 
 //show all talleres from a teacher
 const showTalleresHistorial = (req, res) => {
-const {dni} = req.params;
+const {dni_docente} = req.params;
 const {} = req.body;
 
-const query = "Select * from talleres where dni = ?";
-db.query(query, [dni], (err, results) => {
+const query = "Select * from taller where dni_docente = ?";
+db.query(query, [dni_docente], (err, results) => {
   if (err) {
     console.error('Error al obtener talleres por DNI del docente:', err);
     return res.status(500).json({ error: 'Error al obtener los talleres' });
