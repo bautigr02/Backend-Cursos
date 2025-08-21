@@ -265,6 +265,43 @@ const getAlumnosByTallerId = (req, res) => {
   });
 };
 
+//insert calification of an student into inscripcion_Taller
+const insertNotaAlumno = (req, res) => {
+  const { idtaller } = req.params;
+  const { dni, nota_taller } = req.body;
+
+  const query = "UPDATE inscripcion_taller SET nota_taller = ? WHERE idtaller = ? AND dni = ?";
+  db.query(query, [nota_taller, idtaller, dni], (err, result) => {
+    if (err) {
+      console.error('Error al insertar nota del alumno:', err);
+      return res.status(500).json({ error: 'Error al insertar la nota' });
+    }
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'No se encontró la inscripción del alumno' });
+    }
+    res.status(200).json({ mensaje: 'Nota del alumno actualizada correctamente' });
+  });
+}; 
+
+//show all talleres from a teacher
+const showTalleresHistorial = (req, res) => {
+const {dni} = req.params;
+const {} = req.body;
+
+const query = "Select * from talleres where dni = ?";
+db.query(query, [dni], (err, results) => {
+  if (err) {
+    console.error('Error al obtener talleres por DNI del docente:', err);
+    return res.status(500).json({ error: 'Error al obtener los talleres' });
+  }
+  if (results.length === 0) {
+    return res.status(404).json({ error: 'No se encontraron talleres para el docente' });
+  }
+  res.status(200).json(results);
+  console.log('Talleres obtenidos correctamente por DNI del docente');
+});
+};
+
 module.exports = {
   loginDocente,
   getDocentes,
@@ -277,4 +314,6 @@ module.exports = {
   getTalleresByCursoId,
   getAlumnosByCursoId,
   getAlumnosByTallerId,
+  insertNotaAlumno,
+  showTalleresHistorial
 };
