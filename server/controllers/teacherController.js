@@ -248,6 +248,23 @@ const getAlumnosByCursoId = (req, res) => {
   });
 };
 
+//get alumnos from inscripcion_taller by taller id
+const getAlumnosByTallerId = (req, res) => {
+  const { idtaller } = req.params;
+  const query = "Select it.dni, it.fec_inscripcion, a.nombre_alumno, a.apellido_alumno, a.email, it.nota_taller from inscripcion_taller it inner join alumno a on it.dni = a.dni where it.idtaller = ?";
+  db.query(query, [idtaller], (err, results) => {
+    if (err) {
+      console.error('Error al obtener alumnos por ID de taller:', err);
+      return res.status(500).json({ error: 'Error al obtener los alumnos' });
+    }
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'No se encontraron alumnos para el taller' });
+    }
+    res.status(200).json(results);
+    console.log('Alumnos obtenidos correctamente por ID de taller');
+  });
+};
+
 module.exports = {
   loginDocente,
   getDocentes,
@@ -259,4 +276,5 @@ module.exports = {
   getCoursesByDocenteDni,
   getTalleresByCursoId,
   getAlumnosByCursoId,
+  getAlumnosByTallerId,
 };

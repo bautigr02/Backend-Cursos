@@ -13,4 +13,5 @@ router.patch('/docente/:dni', teacherController.updateDocentePatch);
 router.get('/docente/cursos/:dni', teacherController.getCoursesByDocenteDni);
 router.get('/docente/cursos/talleres/:idcurso', teacherController.getTalleresByCursoId);
 router.get('/docente/cursos/alumnos/:idcurso', teacherController.getAlumnosByCursoId);
+router.get('/docente/talleres/alumnos/:idtaller', teacherController.getAlumnosByTallerId);
 module.exports = router;
