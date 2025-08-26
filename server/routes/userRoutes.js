@@ -25,5 +25,4 @@ router.get('/alumno/:dni/talleres', getTalleresByAlumno);
 router.post('/inscripcion_curso', inscribirAlumnoEnCurso);
 router.post('/inscripcion_taller', inscribirAlumnoEnTaller);
 router.patch('/inscripcion_taller/:dni/:idtaller', cancelarInscripcionTaller);
-
 module.exports = router;

@@ -301,6 +301,7 @@ const inscribirAlumnoEnCurso = (req, res) => {
         return res.status(400).json({ error: 'El alumno ya está inscrito en este curso' });
       }
     }
+
   });
 };
 

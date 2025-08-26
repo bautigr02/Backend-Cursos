@@ -200,7 +200,7 @@ const updateDocentePatch = (req, res) => {
 //get all courses by docente dni
 const getCoursesByDocenteDni = (req, res) => {
   const { dni } = req.params;
-  const query = 'Select idcurso, nom_curso, num_aula from curso where dni_docente = ?' ;
+  const query = 'Select idcurso, nom_curso, num_aula, fec_ini, fec_fin, descripcion from curso where dni_docente = ?' ;
   db.query(query, [dni], (err, results) => {
     if (err) {
       console.error('Error al obtener cursos por DNI del docente:', err);
@@ -217,7 +217,7 @@ const getCoursesByDocenteDni = (req, res) => {
 //get all talleres by curso id
 const getTalleresByCursoId = (req, res) => {
   const {idcurso} = req.params;
-  const query = "Select Nom_taller, fecha, hora_ini from taller where idcurso = ?";
+  const query = "Select idtaller, nom_taller, fecha, hora_ini from taller where idcurso = ?";
   db.query(query, [idcurso], (err, results) => {
     if (err) {
       console.error('Error al obtener talleres por ID de curso:', err);
@@ -231,14 +231,89 @@ const getTalleresByCursoId = (req, res) => {
   });
 };
 
+//get alumnos from inscripcion_curso by curso id
+const getAlumnosByCursoId = (req, res) => {
+  const { idcurso } = req.params;
+  const query = "Select ic.dni, ic.fec_inscripcion, a.nombre_alumno, a.apellido_alumno, a.email from inscripcion_curso ic inner join alumno a on ic.dni = a.dni where ic.idcurso = ?";
+  db.query(query, [idcurso], (err, results) => {
+    if (err) {
+      console.error('Error al obtener alumnos por ID de curso:', err);
+      return res.status(500).json({ error: 'Error al obtener los alumnos' });
+    }
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'No se encontraron alumnos para el curso' });
+    }
+    res.status(200).json(results);
+    console.log('Alumnos obtenidos correctamente por ID de curso');
+  });
+};
+
+//get alumnos from inscripcion_taller by taller id
+const getAlumnosByTallerId = (req, res) => {
+  const { idtaller } = req.params;
+  const query = "Select it.dni, it.fec_inscripcion, a.nombre_alumno, a.apellido_alumno, a.email, it.nota_taller from inscripcion_taller it inner join alumno a on it.dni = a.dni where it.idtaller = ?";
+  db.query(query, [idtaller], (err, results) => {
+    if (err) {
+      console.error('Error al obtener alumnos por ID de taller:', err);
+      return res.status(500).json({ error: 'Error al obtener los alumnos' });
+    }
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'No se encontraron alumnos para el taller' });
+    }
+    res.status(200).json(results);
+    console.log('Alumnos obtenidos correctamente por ID de taller');
+  });
+};
+
+//insert calification of an student into inscripcion_Taller
+const insertNotaAlumno = (req, res) => {
+  const { idtaller } = req.params;
+  const { dni, nota_taller } = req.body;
+
+  const query = "UPDATE inscripcion_taller SET nota_taller = ? WHERE idtaller = ? AND dni = ?";
+  db.query(query, [nota_taller, idtaller, dni], (err, result) => {
+    if (err) {
+      console.error('Error al insertar nota del alumno:', err);
+      return res.status(500).json({ error: 'Error al insertar la nota' });
+    }
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'No se encontró la inscripción del alumno' });
+    }
+    res.status(200).json({ mensaje: 'Nota del alumno actualizada correctamente' });
+  });
+}; 
+
+//show all talleres from a teacher
+const showTalleresHistorial = (req, res) => {
+const {dni_docente} = req.params;
+const {} = req.body;
+
+const query = "Select * from taller where dni_docente = ?";
+db.query(query, [dni_docente], (err, results) => {
+  if (err) {
+    console.error('Error al obtener talleres por DNI del docente:', err);
+    return res.status(500).json({ error: 'Error al obtener los talleres' });
+  }
+  if (results.length === 0) {
+    return res.status(404).json({ error: 'No se encontraron talleres para el docente' });
+  }
+  res.status(200).json(results);
+  console.log('Talleres obtenidos correctamente por DNI del docente');
+});
+};
+
 module.exports = {
   loginDocente,
   getDocentes,
   getDocenteByDni,
-    createDocente,
-    deleteDocenteByDni,
+  createDocente,
+  deleteDocenteByDni,
   updateDocente,
   updateDocentePatch,
   getCoursesByDocenteDni,
   getTalleresByCursoId,
+  getAlumnosByCursoId,
+  getAlumnosByTallerId,
+  insertNotaAlumno,
+  showTalleresHistorial
 };
