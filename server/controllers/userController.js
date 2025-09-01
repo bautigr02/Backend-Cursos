@@ -242,23 +242,69 @@ const getTalleresByAlumno = (req, res) => {
   });
 };
 
-// Controlador para cancelar inscripción a un curso (Cambiar estado a "3")
+// Controlador para cancelar inscripción a un curso (Cambiar estado a "3") y cancelar talleres asociados
 const cancelarInscripcionCurso = (req, res) => {
   const { dni, idcurso } = req.params;
 
-  const sql = `UPDATE inscripcion_curso SET estado = 3, nota_curso = NULL WHERE dni = ? AND idcurso = ?`;
-
-  db.query(sql, [dni, idcurso], (err, result) => {
+  // Verificar que la inscripción al curso existe
+  const checkCursoSql = `SELECT estado FROM inscripcion_curso WHERE dni = ? AND idcurso = ?`;
+  db.query(checkCursoSql, [dni, idcurso], (err, cursoResults) => {
     if (err) {
-      console.error('Error al cancelar inscripción al curso:', err);
+      console.error('Error al verificar inscripción al curso:', err);
       return res.status(500).json({ error: 'Error en el servidor' });
     }
 
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ mensaje: 'Inscripción no encontrada o ya cancelada' });
+    if (cursoResults.length === 0) {
+      return res.status(404).json({ error: 'No estás inscripto en este curso' });
     }
 
-    res.status(200).json({ mensaje: 'Inscripción cancelada correctamente' });
+    const estadoActual = cursoResults[0].estado;
+    if (estadoActual === 3) {
+      return res.status(400).json({ error: 'La inscripción ya está cancelada' });
+    }
+
+    // Primero cancelamos la inscripción al curso
+    const cancelCursoSql = `UPDATE inscripcion_curso SET estado = 3, nota_curso = NULL WHERE dni = ? AND idcurso = ?`;
+    db.query(cancelCursoSql, [dni, idcurso], (err, cursoResult) => {
+      if (err) {
+        console.error('Error al cancelar inscripción al curso:', err);
+        return res.status(500).json({ error: 'Error al cancelar inscripción al curso' });
+      }
+
+      if (cursoResult.affectedRows === 0) {
+        return res.status(404).json({ error: 'No se encontró la inscripción al curso' });
+      }
+
+      // Ahora cancelamos todas las inscripciones a talleres del mismo curso
+      const cancelTalleresSql = `
+        UPDATE inscripcion_taller 
+        SET estado = 3, nota_taller = NULL 
+        WHERE dni = ? AND idcurso = ? AND estado IN (1, 2)
+      `;
+      
+      db.query(cancelTalleresSql, [dni, idcurso], (err, talleresResult) => {
+        if (err) {
+          console.error('Error al cancelar inscripciones a talleres:', err);
+          // Aunque falle la cancelación de talleres, el curso ya fue cancelado
+          return res.status(200).json({ 
+            mensaje: 'Inscripción al curso cancelada, pero hubo un error al cancelar los talleres',
+            warning: 'Algunos talleres pueden no haberse cancelado correctamente'
+          });
+        }
+
+        const talleresCancelados = talleresResult.affectedRows;
+        
+        if (talleresCancelados > 0) {
+          res.status(200).json({ 
+            mensaje: `Inscripción al curso cancelada correctamente. También se cancelaron ${talleresCancelados} inscripciones a talleres del curso.`
+          });
+        } else {
+          res.status(200).json({ 
+            mensaje: 'Inscripción al curso cancelada correctamente. No había inscripciones activas a talleres de este curso.'
+          });
+        }
+      });
+    });
   });
 };
 
