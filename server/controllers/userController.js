@@ -305,10 +305,11 @@ const inscribirAlumnoEnCurso = (req, res) => {
   });
 };
 
-// Controlador para inscribir alumno en un taller. Conseguir el idcurso mediante join
+// Controlador para inscribir alumno en un taller. Verificar inscripción al curso primero
 const inscribirAlumnoEnTaller = (req, res) => {
   const { dni, idtaller } = req.body;
-  // obtenemos el idcurso del taller - Autoincremental de idtaller activado
+  
+  // Obtenemos el idcurso del taller
   const getCursoSql = `SELECT idcurso FROM taller WHERE idtaller = ?`;
   db.query(getCursoSql, [idtaller], (err, results) => {
     if (err) {
@@ -322,44 +323,79 @@ const inscribirAlumnoEnTaller = (req, res) => {
 
     const idcurso = results[0].idcurso;
 
-    // Primero, verificamos si el alumno ya está inscrito en el taller
-    const checkSql = `SELECT estado FROM inscripcion_taller WHERE dni = ? AND idtaller = ? AND idcurso = ?`;
-    db.query(checkSql, [dni, idtaller, idcurso], (err, results) => {
+    // VERIFICAR SI EL ALUMNO ESTÁ INSCRIPTO AL CURSO CORRESPONDIENTE
+    const checkCursoSql = `SELECT estado FROM inscripcion_curso WHERE dni = ? AND idcurso = ?`;
+    db.query(checkCursoSql, [dni, idcurso], (err, cursoResults) => {
       if (err) {
-        console.error('Error al verificar inscripción:', err);
-      return res.status(500).json({ error: 'Error en el servidor' });
-    }
+        console.error('Error al verificar inscripción al curso:', err);
+        return res.status(500).json({ error: 'Error en el servidor' });
+      }
 
-    if (results.length === 0) {
-      // Si no existe, lo inscribimos
-      const insertSql = `INSERT INTO inscripcion_taller (dni, idtaller, idcurso, estado, fec_inscripcion) VALUES (?, ?, ?, 1, NOW())`;
-      db.query(insertSql, [dni, idtaller, idcurso], (err, result) => {
+      if (cursoResults.length === 0) {
+        return res.status(400).json({ error: 'Debes estar inscripto al curso correspondiente para inscribirte en este taller' });
+      }
+
+      const estadoCurso = cursoResults[0].estado;
+      // Solo permitir si está inscripto (estado 1) o cursando (estado 2)
+      if (estadoCurso !== 1 && estadoCurso !== 2) {
+        return res.status(400).json({ error: 'Debes estar inscripto y cursando el curso para inscribirte en este taller' });
+      }
+
+      // Verificar fecha del taller (debe ser futura)
+      const checkFechaSql = `SELECT fecha FROM taller WHERE idtaller = ?`;
+      db.query(checkFechaSql, [idtaller], (err, fechaResults) => {
         if (err) {
-          console.error('Error al inscribir alumno:', err);
+          console.error('Error al verificar fecha del taller:', err);
           return res.status(500).json({ error: 'Error en el servidor' });
         }
-        return res.status(201).json({ mensaje: 'Inscripción exitosa' });
-      });
-    } else {
-      // Si existe, verificamos el estado
-      const estadoActual = results[0].estado;
-      if (estadoActual === 3) {
-        // Si el estado es 3, lo cambiamos a 1
-        const updateSql = `UPDATE inscripcion_taller SET estado = 1, fec_inscripcion = NOW() WHERE dni = ? AND idtaller = ? AND idcurso = ?`;
-        db.query(updateSql, [dni, idtaller, idcurso], (err, result) => {
+
+        const fechaTaller = new Date(fechaResults[0].fecha);
+        const fechaActual = new Date();
+        
+        if (fechaTaller <= fechaActual) {
+          return res.status(400).json({ error: 'No puedes inscribirte a un taller que ya comenzó o finalizó' });
+        }
+
+        // Ahora verificamos si el alumno ya está inscrito en el taller
+        const checkTallerSql = `SELECT estado FROM inscripcion_taller WHERE dni = ? AND idtaller = ? AND idcurso = ?`;
+        db.query(checkTallerSql, [dni, idtaller, idcurso], (err, tallerResults) => {
           if (err) {
-            console.error('Error al actualizar inscripción:', err);
+            console.error('Error al verificar inscripción al taller:', err);
             return res.status(500).json({ error: 'Error en el servidor' });
           }
-          return res.status(200).json({ mensaje: 'Inscripción reactivada' });
+
+          if (tallerResults.length === 0) {
+            // Si no existe, lo inscribimos
+            const insertSql = `INSERT INTO inscripcion_taller (dni, idtaller, idcurso, estado, fec_inscripcion) VALUES (?, ?, ?, 1, NOW())`;
+            db.query(insertSql, [dni, idtaller, idcurso], (err, result) => {
+              if (err) {
+                console.error('Error al inscribir alumno en taller:', err);
+                return res.status(500).json({ error: 'Error en el servidor' });
+              }
+              return res.status(201).json({ mensaje: 'Inscripción al taller exitosa' });
+            });
+          } else {
+            // Si existe, verificamos el estado
+            const estadoActual = tallerResults[0].estado;
+            if (estadoActual === 3) {
+              // Si el estado es 3 (cancelado), lo cambiamos a 1
+              const updateSql = `UPDATE inscripcion_taller SET estado = 1, fec_inscripcion = NOW(), nota_taller = NULL WHERE dni = ? AND idtaller = ? AND idcurso = ?`;
+              db.query(updateSql, [dni, idtaller, idcurso], (err, result) => {
+                if (err) {
+                  console.error('Error al reactivar inscripción al taller:', err);
+                  return res.status(500).json({ error: 'Error en el servidor' });
+                }
+                return res.status(200).json({ mensaje: 'Inscripción al taller reactivada' });
+              });
+            } else {
+              return res.status(400).json({ error: 'Ya estás inscripto en este taller' });
+            }
+          }
         });
-      } else {
-        return res.status(400).json({ error: 'El alumno ya está inscrito en este taller' });
-      }
-    }
+      });
+    });
   });
-});
-}
+};
 
 // Controlador para cancelar inscripción a un taller (Cambiar estado a "3"). Obtener idcurso desde idtaller
 const cancelarInscripcionTaller = (req, res) => {
