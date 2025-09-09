@@ -283,6 +283,42 @@ const insertNotaAlumno = (req, res) => {
   });
 }; 
 
+//get all califications of a student in a course
+const getNotasByAlumnoInCurso = (req, res) => {
+  const { dni, idcurso } = req.params;
+  const query = `
+    SELECT it.nota_taller, t.nom_taller
+    FROM inscripcion_taller it
+    INNER JOIN taller t ON it.idtaller = t.idtaller
+    WHERE it.dni = ? AND t.idcurso = ? 
+  `;
+  db.query(query, [dni, idcurso], (err, results) => {
+    if (err) {
+      console.error('Error al obtener notas del alumno en el curso:', err);
+      return res.status(500).json({ error: 'Error al obtener las notas' });
+    }
+    return res.status(200).json(results);
+  });
+};
+
+// insert calification of a student into inscripcion_Curso
+const insertNotaCursoAlumno = (req, res) => {
+  const { idcurso } = req.params;  
+  const { dni, nota_curso } = req.body;
+
+  const query = "UPDATE inscripcion_curso SET nota_curso = ? WHERE idcurso = ? AND dni = ?";
+  db.query(query, [nota_curso, idcurso, dni], (err, result) => {
+    if (err) {
+      console.error('Error al insertar nota del alumno:', err);
+      return res.status(500).json({ error: 'Error al insertar la nota' });
+    }
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'No se encontró la inscripción del alumno' });
+    }
+    res.status(200).json({ mensaje: 'Nota del alumno actualizada correctamente' });
+  });
+};
+
 //show all talleres from a teacher
 const showTalleresHistorial = (req, res) => {
 const {dni_docente} = req.params;
@@ -315,5 +351,7 @@ module.exports = {
   getAlumnosByCursoId,
   getAlumnosByTallerId,
   insertNotaAlumno,
+  getNotasByAlumnoInCurso,
+  insertNotaCursoAlumno,
   showTalleresHistorial
 };

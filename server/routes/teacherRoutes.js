@@ -15,5 +15,7 @@ router.get('/docente/cursos/talleres/:idcurso', teacherController.getTalleresByC
 router.get('/docente/cursos/alumnos/:idcurso', teacherController.getAlumnosByCursoId);
 router.get('/docente/talleres/alumnos/:idtaller', teacherController.getAlumnosByTallerId);
 router.post('/docente/talleres/alumnos/nota', teacherController.insertNotaAlumno);
+router.get('/docente/talleres/alumnos/nota/:dni/:idcurso', teacherController.getNotasByAlumnoInCurso);
+router.post('/docente/talleres/alumnos/nota/curso/:idcurso', teacherController.insertNotaCursoAlumno);
 router.get('/docente/talleres/historial/:dni_docente', teacherController.showTalleresHistorial);
 module.exports = router;
