@@ -234,7 +234,7 @@ const getTalleresByCursoId = (req, res) => {
 //get alumnos from inscripcion_curso by curso id
 const getAlumnosByCursoId = (req, res) => {
   const { idcurso } = req.params;
-  const query = "Select ic.dni, ic.fec_inscripcion, a.nombre_alumno, a.apellido_alumno, a.email from inscripcion_curso ic inner join alumno a on ic.dni = a.dni where ic.idcurso = ?";
+  const query = "Select ic.dni, ic.fec_inscripcion, a.nombre_alumno, a.apellido_alumno, a.email, ic.nota_curso as notaFinal from inscripcion_curso ic inner join alumno a on ic.dni = a.dni where ic.idcurso = ?";
   db.query(query, [idcurso], (err, results) => {
     if (err) {
       console.error('Error al obtener alumnos por ID de curso:', err);
@@ -318,6 +318,7 @@ const insertNotaCursoAlumno = (req, res) => {
     res.status(200).json({ mensaje: 'Nota del alumno actualizada correctamente' });
   });
 };
+
 
 //show all talleres from a teacher
 const showTalleresHistorial = (req, res) => {
