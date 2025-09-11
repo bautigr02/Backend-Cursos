@@ -9,5 +9,6 @@ router.post('/talleres', workshopController.createTaller);
 router.delete('/talleres/:id', workshopController.deleteTaller);
 router.put('/talleres/:id', workshopController.putTaller);
 router.patch('/talleres/:id', workshopController.patchTaller);
+router.delete('/talleres/curso/:idcurso', workshopController.deleteTalleresByCursoId);
 
 module.exports = router;

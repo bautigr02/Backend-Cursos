@@ -138,6 +138,19 @@ const patchTaller = (req, res) => {
   });
 };
 
+// DELETE talleres by curso ID (for cascading delete when a course is deleted)
+const deleteTalleresByCursoId = (req, res) => {
+  const { idcurso } = req.params;
+  const query = 'DELETE FROM taller WHERE idcurso = ?';
+  db.query(query, [idcurso], (err, result) => {
+    if (err) {
+      console.error('Error al eliminar talleres por ID de curso:', err);
+      return res.status(500).json({ error: 'Error al eliminar talleres por ID de curso' });
+    }
+    res.status(200).json({ message: 'Talleres eliminados correctamente' });
+    console.log('Talleres eliminados para el curso con ID:', idcurso);
+  });
+};
 module.exports = {
   getTalleres,
   getTallerById,
@@ -145,5 +158,6 @@ module.exports = {
   createTaller,
   deleteTaller,
   putTaller,
-  patchTaller
+  patchTaller,
+  deleteTalleresByCursoId
 };
