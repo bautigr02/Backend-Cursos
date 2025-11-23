@@ -1,3 +1,5 @@
+const jwt = require('jsonwebtoken');
+const SECRET_KEY = process.env.JWT_SECRET || 'clave-secreta-123';
 const db = require('../models/db');
 
 // Formulario Register
@@ -38,41 +40,42 @@ const createAlumno = (req, res) => {
 const loginAlumno = (req, res) => {
   const { identifier, password } = req.body;
 
+  let query = identifier.includes('@')
+    ? 'SELECT * FROM alumno WHERE email = ?'
+    : 'SELECT * FROM alumno WHERE dni = ?';
 
-  let query;
-  if (identifier.includes('@')) {
-
-    query = 'SELECT * FROM alumno WHERE email = ?';
-  } else {
-  
-    query = 'SELECT * FROM alumno WHERE dni = ?';
-  }
-
-  db.query(query, [identifier], (checkError, checkResults) => {
-    if (checkError) {
-      console.error('Error al verificar las credenciales:', checkError);
-      return res.status(500).json({ error: 'Error al verificar las credenciales' });
-    }
-
-    if (checkResults.length === 0) {
-      return res.status(400).json({ error: 'Usuario no encontrado' });
-    }
-    const alumno = checkResults[0];
+  db.query(query, [identifier], (err, results) => {
+    if (err) return res.status(500).json({ error: 'Error al verificar las credenciales' });
+    if (results.length === 0) return res.status(400).json({ error: 'Usuario no encontrado' });
+    
+    const alumno = results[0];
     if (alumno.contrasena !== password) {
       return res.status(400).json({ error: 'contrasena incorrecta' });
     }
-    res.status(200).json({ message: 'Login exitoso',
-      user: { dni: alumno.dni,
-      nombre: alumno.nombre_alumno,
-      apellido: alumno.apellido_alumno,
-      telefono: alumno.telefono,
-      direccion: alumno.direccion,
+
+    const payload = {
+      dni: alumno.dni,
       email: alumno.email,
-      fecha_nacimiento: alumno.fecha_nacimiento}
-     });
+      nombre: alumno.nombre_alumno
+    };
+
+    const token = jwt.sign(payload, SECRET_KEY, { expiresIn: '1h' });
+
+    res.status(200).json({
+      message: 'Login exitoso',
+      token,
+      user: {
+        dni: alumno.dni,
+        nombre: alumno.nombre_alumno,
+        apellido: alumno.apellido_alumno,
+        telefono: alumno.telefono,
+        direccion: alumno.direccion,
+        email: alumno.email,
+        fecha_nacimiento: alumno.fecha_nacimiento
+      }
+    });
   });
 };
-
 
 // Actualizar datos del alumno
 const updateAlumno = (req, res) => {
