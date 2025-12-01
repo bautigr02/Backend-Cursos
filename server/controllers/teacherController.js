@@ -1,3 +1,7 @@
+const jwt = require('jsonwebtoken');
+require('dotenv').config();
+
+const SECRET_KEY = process.env.JWT_SECRET;
 const db = require('../models/db');
 
 //Obtener docente a partir del login
@@ -25,7 +29,12 @@ const loginDocente = (req, res) => {
     if (docente.contrasena !== password) {
       return res.status(400).json({ error: 'contrasena incorrecta' });
     }
+
+    const payload = { dni: docente.dni, email: docente.email, nombre: docente.nombre };
+    const token = jwt.sign(payload, SECRET_KEY, { expiresIn: '1h' });
+
     res.status(200).json({ message: 'Login exitoso',
+      token,
       user: { dni: docente.dni,
       nombre: docente.nombre,
       apellido: docente.apellido,
