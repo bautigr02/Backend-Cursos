@@ -54,6 +54,22 @@ const putCurso = (req, res) => {
   if (!nom_curso || !fec_ini || !fec_fin || !estado || !num_aula || !dni_docente) {
     return res.status(400).json({ error: 'Faltan datos obligatorios' });
   }
+  const fechaInicio = new Date(fec_ini);
+  const fechaFin = new Date(fec_fin);
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+
+  if (Number.isNaN(fechaInicio.getTime()) || Number.isNaN(fechaFin.getTime())) {
+    return res.status(400).json({ error: 'Fechas inválidas' });
+  }
+
+  if (fechaInicio < hoy) {
+    return res.status(400).json({ error: 'La fecha de inicio debe ser hoy o una fecha futura' });
+  }
+
+  if (fechaFin <= fechaInicio) {
+    return res.status(400).json({ error: 'La fecha de fin debe ser posterior a la fecha de inicio' });
+  }
   const query = `
     UPDATE curso 
     SET nom_curso = ?, fec_ini = ?, fec_fin = ?, estado = ?, num_aula = ?, dni_docente = ?
@@ -109,6 +125,23 @@ const createCurso = (req, res) => {
   const { nom_curso, fec_ini, fec_fin, estado, num_aula, dni_docente, descripcion, imagen } = req.body;
   if (!nom_curso || !fec_ini || !fec_fin || !estado || !num_aula || !dni_docente) {
     return res.status(400).json({ error: 'Faltan datos obligatorios' });
+  }
+  const fechaInicio = new Date(fec_ini);
+  const fechaFin = new Date(fec_fin);
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+
+  // Validar formato y rango de fechas
+  if (Number.isNaN(fechaInicio.getTime()) || Number.isNaN(fechaFin.getTime())) {
+    return res.status(400).json({ error: 'Fechas inválidas' });
+  }
+
+  if (fechaInicio < hoy) {
+    return res.status(400).json({ error: 'La fecha de inicio debe ser hoy o una fecha futura' });
+  }
+
+  if (fechaFin <= fechaInicio) {
+    return res.status(400).json({ error: 'La fecha de fin debe ser posterior a la fecha de inicio' });
   }
   const query = 'INSERT INTO curso (nom_curso, fec_ini, fec_fin, estado, num_aula, dni_docente, descripcion, imagen) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
   db.query(query, [nom_curso, fec_ini, fec_fin, estado, num_aula, dni_docente, descripcion, imagen], (err, result) => {
