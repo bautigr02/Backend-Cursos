@@ -137,49 +137,67 @@ const putTaller = (req, res) => {
   if (!idcurso || !nom_taller || !fecha || !tematica || !herramienta || !hora_ini || !requisitos || !dificultad || !dni_docente) {
     return res.status(400).json({ error: 'Faltan datos obligatorios' });
   }
-  const difVal = Number(dificultad);
-  if (!Number.isInteger(difVal) || difVal < 0 || difVal > 3) {
-    return res.status(400).json({ error: 'La dificultad debe ser un entero entre 0 y 3 (0: desconocido, 1: principiante, 2: intermedio, 3: avanzado)' });
-  }
-  validateWorkshopDateRange(idcurso, fecha, (err, status) => {
+  // Verificar si el taller ya comenzó
+  const queryTallerActual = 'SELECT fecha FROM taller WHERE idtaller = ? LIMIT 1';
+  db.query(queryTallerActual, [id], (err, results) => {
     if (err) {
-      console.error('Error al validar fechas de taller:', err);
-      return res.status(500).json({ error: 'Error al validar fechas de taller' });
+      console.error('Error al obtener taller:', err);
+      return res.status(500).json({ error: 'Error al validar el taller' });
     }
-    if (status === 'invalid-date') {
-      return res.status(400).json({ error: 'Fecha de taller inválida' });
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'Taller no encontrado' });
     }
-    if (status === 'course-not-found') {
-      return res.status(404).json({ error: 'Curso no encontrado para el taller' });
+    const fechaTallerActual = new Date(results[0].fecha);
+    const hoyAhora = new Date();
+    hoyAhora.setHours(0, 0, 0, 0);
+    if (fechaTallerActual <= hoyAhora) {
+      return res.status(400).json({ error: 'No se puede editar un taller que ya ha comenzado' });
     }
-    if (status === 'course-invalid-dates') {
-      return res.status(400).json({ error: 'El curso tiene fechas inválidas' });
+    const difVal = Number(dificultad);
+    if (!Number.isInteger(difVal) || difVal < 0 || difVal > 3) {
+      return res.status(400).json({ error: 'La dificultad debe ser un entero entre 0 y 3 (0: desconocido, 1: principiante, 2: intermedio, 3: avanzado)' });
     }
-    if (status === 'out-of-range') {
-      return res.status(400).json({ error: 'La fecha del taller debe estar dentro del rango de fechas del curso' });
-    }
-  const query = `
-    UPDATE taller 
-    SET idcurso = ?, nom_taller = ?, fecha = ?, tematica = ?, herramienta = ?, hora_ini = ?, requisitos = ?, dificultad = ?, dni_docente = ?, imagen = ?
-    WHERE idtaller = ?
-  `;
-  db.query(
-    query,
-    [idcurso, nom_taller, fecha, tematica, herramienta, hora_ini, requisitos, dificultad, dni_docente, id],
-    (err, result) => {
+    validateWorkshopDateRange(idcurso, fecha, (err, status) => {
       if (err) {
-        console.error('Error al actualizar el taller:', err);
-        return res.status(500).json({ error: 'Error al actualizar el taller' });
+        console.error('Error al validar fechas de taller:', err);
+        return res.status(500).json({ error: 'Error al validar fechas de taller' });
       }
-      if (result.affectedRows === 0) {
-        return res.status(404).json({ error: 'Taller no encontrado' });
+      if (status === 'invalid-date') {
+        return res.status(400).json({ error: 'Fecha de taller inválida' });
       }
-      res.status(200).json({ message: 'Taller actualizado correctamente' });
-      console.log('Taller actualizado con ID:', id);
-    }
-  );
+      if (status === 'course-not-found') {
+        return res.status(404).json({ error: 'Curso no encontrado para el taller' });
+      }
+      if (status === 'course-invalid-dates') {
+        return res.status(400).json({ error: 'El curso tiene fechas inválidas' });
+      }
+      if (status === 'out-of-range') {
+        return res.status(400).json({ error: 'La fecha del taller debe estar dentro del rango de fechas del curso' });
+      }
+      const query = `
+        UPDATE taller 
+        SET idcurso = ?, nom_taller = ?, fecha = ?, tematica = ?, herramienta = ?, hora_ini = ?, requisitos = ?, dificultad = ?, dni_docente = ?, imagen = ?
+        WHERE idtaller = ?
+      `;
+      db.query(
+        query,
+        [idcurso, nom_taller, fecha, tematica, herramienta, hora_ini, requisitos, dificultad, dni_docente, imagen, id],
+        (err, result) => {
+          if (err) {
+            console.error('Error al actualizar el taller:', err);
+            return res.status(500).json({ error: 'Error al actualizar el taller' });
+          }
+          if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Taller no encontrado' });
+          }
+          res.status(200).json({ message: 'Taller actualizado correctamente' });
+          console.log('Taller actualizado con ID:', id);
+        }
+      );
+    });
   });
 };
+
 
 // PATCH (actualizar parcialmente el taller)
 const patchTaller = (req, res) => {
@@ -190,78 +208,96 @@ const patchTaller = (req, res) => {
     return res.status(400).json({ error: 'No se enviaron campos para actualizar' });
   }
 
-  const setClause = Object.keys(campos).map(key => `${key} = ?`).join(', ');
-  const values = Object.values(campos);
-
-  // Validar dificultad si se actualiza
-  if (Object.prototype.hasOwnProperty.call(campos, 'dificultad')) {
-    const difVal = Number(campos.dificultad);
-    if (!Number.isInteger(difVal) || difVal < 0 || difVal > 3) {
-      return res.status(400).json({ error: 'La dificultad debe ser un entero entre 0 y 3 (0: desconocido, 1: principiante, 2: intermedio, 3: avanzado)' });
+  // Verificar si el taller ya comenzó
+  const queryTallerActual = 'SELECT fecha FROM taller WHERE idtaller = ? LIMIT 1';
+  db.query(queryTallerActual, [id], (err, results) => {
+    if (err) {
+      console.error('Error al obtener taller:', err);
+      return res.status(500).json({ error: 'Error al validar el taller' });
     }
-  }
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'Taller no encontrado' });
+    }
+    const fechaTallerActual = new Date(results[0].fecha);
+    const hoyAhora = new Date();
+    hoyAhora.setHours(0, 0, 0, 0);
+    if (fechaTallerActual <= hoyAhora) {
+      return res.status(400).json({ error: 'No se puede editar un taller que ya ha comenzado' });
+    }
 
-  // Si se va a modificar fecha o idcurso, validar rango utilizando valores actuales si falta alguno
-  if (campos.fecha || campos.idcurso) {
-    const queryActual = 'SELECT idcurso, fecha FROM taller WHERE idtaller = ? LIMIT 1';
-    db.query(queryActual, [id], (err, results) => {
-      if (err) {
-        console.error('Error al obtener taller para validar fecha:', err);
-        return res.status(500).json({ error: 'Error al validar fecha del taller' });
+    const setClause = Object.keys(campos).map(key => `${key} = ?`).join(', ');
+    const values = Object.values(campos);
+
+    // Validar dificultad si se actualiza
+    if (Object.prototype.hasOwnProperty.call(campos, 'dificultad')) {
+      const difVal = Number(campos.dificultad);
+      if (!Number.isInteger(difVal) || difVal < 0 || difVal > 3) {
+        return res.status(400).json({ error: 'La dificultad debe ser un entero entre 0 y 3 (0: desconocido, 1: principiante, 2: intermedio, 3: avanzado)' });
       }
-      if (results.length === 0) {
-        return res.status(404).json({ error: 'Taller no encontrado' });
-      }
+    }
 
-      const idcursoTarget = campos.idcurso || results[0].idcurso;
-      const fechaTarget = campos.fecha || results[0].fecha;
-
-      validateWorkshopDateRange(idcursoTarget, fechaTarget, (valErr, status) => {
-        if (valErr) {
-          console.error('Error al validar fechas de taller:', valErr);
-          return res.status(500).json({ error: 'Error al validar fechas de taller' });
+    // Si se va a modificar fecha o idcurso, validar rango utilizando valores actuales si falta alguno
+    if (campos.fecha || campos.idcurso) {
+      const queryActual = 'SELECT idcurso, fecha FROM taller WHERE idtaller = ? LIMIT 1';
+      db.query(queryActual, [id], (err, results) => {
+        if (err) {
+          console.error('Error al obtener taller para validar fecha:', err);
+          return res.status(500).json({ error: 'Error al validar fecha del taller' });
         }
-        if (status === 'invalid-date') {
-          return res.status(400).json({ error: 'Fecha de taller inválida' });
-        }
-        if (status === 'course-not-found') {
-          return res.status(404).json({ error: 'Curso no encontrado para el taller' });
-        }
-        if (status === 'course-invalid-dates') {
-          return res.status(400).json({ error: 'El curso tiene fechas inválidas' });
-        }
-        if (status === 'out-of-range') {
-          return res.status(400).json({ error: 'La fecha del taller debe estar dentro del rango de fechas del curso' });
+        if (results.length === 0) {
+          return res.status(404).json({ error: 'Taller no encontrado' });
         }
 
-        const query = `UPDATE taller SET ${setClause} WHERE idtaller = ?`;
-        db.query(query, [...values, id], (updErr, result) => {
-          if (updErr) {
-            console.error('Error al actualizar parcialmente el taller:', updErr);
-            return res.status(500).json({ error: 'Error al actualizar el taller' });
+        const idcursoTarget = campos.idcurso || results[0].idcurso;
+        const fechaTarget = campos.fecha || results[0].fecha;
+
+        validateWorkshopDateRange(idcursoTarget, fechaTarget, (valErr, status) => {
+          if (valErr) {
+            console.error('Error al validar fechas de taller:', valErr);
+            return res.status(500).json({ error: 'Error al validar fechas de taller' });
           }
-          if (result.affectedRows === 0) {
-            return res.status(404).json({ error: 'Taller no encontrado' });
+          if (status === 'invalid-date') {
+            return res.status(400).json({ error: 'Fecha de taller inválida' });
           }
-          res.status(200).json({ message: 'Taller actualizado parcialmente' });
-          console.log('Taller actualizado parcialmente con ID:', id);
+          if (status === 'course-not-found') {
+            return res.status(404).json({ error: 'Curso no encontrado para el taller' });
+          }
+          if (status === 'course-invalid-dates') {
+            return res.status(400).json({ error: 'El curso tiene fechas inválidas' });
+          }
+          if (status === 'out-of-range') {
+            return res.status(400).json({ error: 'La fecha del taller debe estar dentro del rango de fechas del curso' });
+          }
+
+          const query = `UPDATE taller SET ${setClause} WHERE idtaller = ?`;
+          db.query(query, [...values, id], (updErr, result) => {
+            if (updErr) {
+              console.error('Error al actualizar parcialmente el taller:', updErr);
+              return res.status(500).json({ error: 'Error al actualizar el taller' });
+            }
+            if (result.affectedRows === 0) {
+              return res.status(404).json({ error: 'Taller no encontrado' });
+            }
+            res.status(200).json({ message: 'Taller actualizado parcialmente' });
+            console.log('Taller actualizado parcialmente con ID:', id);
+          });
         });
       });
-    });
-  } else {
-    const query = `UPDATE taller SET ${setClause} WHERE idtaller = ?`;
-    db.query(query, [...values, id], (err, result) => {
-      if (err) {
-        console.error('Error al actualizar parcialmente el taller:', err);
-        return res.status(500).json({ error: 'Error al actualizar el taller' });
-      }
-      if (result.affectedRows === 0) {
-        return res.status(404).json({ error: 'Taller no encontrado' });
-      }
-      res.status(200).json({ message: 'Taller actualizado parcialmente' });
-      console.log('Taller actualizado parcialmente con ID:', id);
-    });
-  }
+    } else {
+      const query = `UPDATE taller SET ${setClause} WHERE idtaller = ?`;
+      db.query(query, [...values, id], (err, result) => {
+        if (err) {
+          console.error('Error al actualizar parcialmente el taller:', err);
+          return res.status(500).json({ error: 'Error al actualizar el taller' });
+        }
+        if (result.affectedRows === 0) {
+          return res.status(404).json({ error: 'Taller no encontrado' });
+        }
+        res.status(200).json({ message: 'Taller actualizado parcialmente' });
+        console.log('Taller actualizado parcialmente con ID:', id);
+      });
+    }
+  });
 };
 
 // DELETE talleres by curso ID (for cascading delete when a course is deleted)
