@@ -54,26 +54,59 @@ const putCurso = (req, res) => {
   if (!nom_curso || !fec_ini || !fec_fin || !estado || !num_aula || !dni_docente) {
     return res.status(400).json({ error: 'Faltan datos obligatorios' });
   }
-  const query = `
-    UPDATE curso 
-    SET nom_curso = ?, fec_ini = ?, fec_fin = ?, estado = ?, num_aula = ?, dni_docente = ?
-    WHERE idcurso = ?
-  `;
-  db.query(
-    query,
-    [nom_curso, fec_ini, fec_fin, estado, num_aula, dni_docente, descripcion, imagen, id],
-    (err, result) => {
-      if (err) {
-        console.error('Error al actualizar el curso:', err);
-        return res.status(500).json({ error: 'Error al actualizar el curso' });
-      }
-      if (result.affectedRows === 0) {
-        return res.status(404).json({ error: 'Curso no encontrado' });
-      }
-      res.status(200).json({ message: 'Curso actualizado correctamente' });
-      console.log('Curso actualizado con ID:', id);
+  // Verificar si el curso ya comenzó
+  const queryCursoActual = 'SELECT fec_ini FROM curso WHERE idcurso = ? LIMIT 1';
+  db.query(queryCursoActual, [id], (err, results) => {
+    if (err) {
+      console.error('Error al obtener curso:', err);
+      return res.status(500).json({ error: 'Error al validar el curso' });
     }
-  );
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'Curso no encontrado' });
+    }
+    const fechaInicioActual = new Date(results[0].fec_ini);
+    const hoyAhora = new Date();
+    hoyAhora.setHours(0, 0, 0, 0);
+    if (fechaInicioActual <= hoyAhora) {
+      return res.status(400).json({ error: 'No se puede editar un curso que ya ha comenzado' });
+    }
+    const fechaInicio = new Date(fec_ini);
+    const fechaFin = new Date(fec_fin);
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+
+    if (Number.isNaN(fechaInicio.getTime()) || Number.isNaN(fechaFin.getTime())) {
+      return res.status(400).json({ error: 'Fechas inválidas' });
+    }
+
+    if (fechaInicio < hoy) {
+      return res.status(400).json({ error: 'La fecha de inicio debe ser hoy o una fecha futura' });
+    }
+
+    if (fechaFin <= fechaInicio) {
+      return res.status(400).json({ error: 'La fecha de fin debe ser posterior a la fecha de inicio' });
+    }
+    const query = `
+      UPDATE curso 
+      SET nom_curso = ?, fec_ini = ?, fec_fin = ?, estado = ?, num_aula = ?, dni_docente = ?
+      WHERE idcurso = ?
+    `;
+    db.query(
+      query,
+      [nom_curso, fec_ini, fec_fin, estado, num_aula, dni_docente, descripcion, imagen, id],
+      (err, result) => {
+        if (err) {
+          console.error('Error al actualizar el curso:', err);
+          return res.status(500).json({ error: 'Error al actualizar el curso' });
+        }
+        if (result.affectedRows === 0) {
+          return res.status(404).json({ error: 'Curso no encontrado' });
+        }
+        res.status(200).json({ message: 'Curso actualizado correctamente' });
+        console.log('Curso actualizado con ID:', id);
+      }
+    );
+  });
 };
 
 // PATCH (actualizar parcialmente el curso)
@@ -85,22 +118,40 @@ const patchCurso = (req, res) => {
     return res.status(400).json({ error: 'No se enviaron campos para actualizar' });
   }
 
-  // Construir la consulta dinámicamente
-  const setClause = Object.keys(campos).map(key => `${key} = ?`).join(', ');
-  const values = Object.values(campos);
-
-  const query = `UPDATE curso SET ${setClause} WHERE idcurso = ?`;
-
-  db.query(query, [...values, id], (err, result) => {
+  // Verificar si el curso ya comenzó
+  const queryCursoActual = 'SELECT fec_ini FROM curso WHERE idcurso = ? LIMIT 1';
+  db.query(queryCursoActual, [id], (err, results) => {
     if (err) {
-      console.error('Error al actualizar parcialmente el curso:', err);
-      return res.status(500).json({ error: 'Error al actualizar el curso' });
+      console.error('Error al obtener curso:', err);
+      return res.status(500).json({ error: 'Error al validar el curso' });
     }
-    if (result.affectedRows === 0) {
+    if (results.length === 0) {
       return res.status(404).json({ error: 'Curso no encontrado' });
     }
-    res.status(200).json({ message: 'Curso actualizado parcialmente' });
-    console.log('Curso actualizado parcialmente con ID:', id);
+    const fechaInicioActual = new Date(results[0].fec_ini);
+    const hoyAhora = new Date();
+    hoyAhora.setHours(0, 0, 0, 0);
+    if (fechaInicioActual <= hoyAhora) {
+      return res.status(400).json({ error: 'No se puede editar un curso que ya ha comenzado' });
+    }
+
+    // Construir la consulta dinámicamente
+    const setClause = Object.keys(campos).map(key => `${key} = ?`).join(', ');
+    const values = Object.values(campos);
+
+    const query = `UPDATE curso SET ${setClause} WHERE idcurso = ?`;
+
+    db.query(query, [...values, id], (err, result) => {
+      if (err) {
+        console.error('Error al actualizar parcialmente el curso:', err);
+        return res.status(500).json({ error: 'Error al actualizar el curso' });
+      }
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ error: 'Curso no encontrado' });
+      }
+      res.status(200).json({ message: 'Curso actualizado parcialmente' });
+      console.log('Curso actualizado parcialmente con ID:', id);
+    });
   });
 };
 
@@ -109,6 +160,23 @@ const createCurso = (req, res) => {
   const { nom_curso, fec_ini, fec_fin, estado, num_aula, dni_docente, descripcion, imagen } = req.body;
   if (!nom_curso || !fec_ini || !fec_fin || !estado || !num_aula || !dni_docente) {
     return res.status(400).json({ error: 'Faltan datos obligatorios' });
+  }
+  const fechaInicio = new Date(fec_ini);
+  const fechaFin = new Date(fec_fin);
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+
+  // Validar formato y rango de fechas
+  if (Number.isNaN(fechaInicio.getTime()) || Number.isNaN(fechaFin.getTime())) {
+    return res.status(400).json({ error: 'Fechas inválidas' });
+  }
+
+  if (fechaInicio < hoy) {
+    return res.status(400).json({ error: 'La fecha de inicio debe ser hoy o una fecha futura' });
+  }
+
+  if (fechaFin <= fechaInicio) {
+    return res.status(400).json({ error: 'La fecha de fin debe ser posterior a la fecha de inicio' });
   }
   const query = 'INSERT INTO curso (nom_curso, fec_ini, fec_fin, estado, num_aula, dni_docente, descripcion, imagen) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
   db.query(query, [nom_curso, fec_ini, fec_fin, estado, num_aula, dni_docente, descripcion, imagen], (err, result) => {

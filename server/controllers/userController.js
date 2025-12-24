@@ -331,7 +331,6 @@ const inscribirAlumnoEnCurso = (req, res) => {
   if (!dni || !idcurso) {
     return res.status(400).json({ error: 'Faltan datos obligatorios' });
   }
-
   // Evita suplantación: el dni del body debe coincidir con el del token si ambos existen
   if (dniFromToken && dniFromBody && dniFromToken !== dniFromBody) {
     return res.status(403).json({ error: 'No autorizado' });
