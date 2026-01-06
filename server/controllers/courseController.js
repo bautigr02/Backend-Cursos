@@ -161,8 +161,8 @@ const createCurso = (req, res) => {
   if (!nom_curso || !fec_ini || !fec_fin || !estado || !num_aula || !dni_docente) {
     return res.status(400).json({ error: 'Faltan datos obligatorios' });
   }
-  const fechaInicio = new Date(fec_ini);
-  const fechaFin = new Date(fec_fin);
+  const fechaInicio = new Date(fec_ini + 'T00:00:00');
+  const fechaFin = new Date(fec_fin + 'T00:00:00');
   const hoy = new Date();
   hoy.setHours(0, 0, 0, 0);
 
