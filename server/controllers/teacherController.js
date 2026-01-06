@@ -276,8 +276,7 @@ const getAlumnosByTallerId = (req, res) => {
 
 //insert calification of an student into inscripcion_Taller
 const insertNotaAlumno = (req, res) => {
-  const { idtaller } = req.params;
-  const { dni, nota_taller } = req.body;
+  const { dni, nota_taller, idtaller} = req.body;
 
   const query = "UPDATE inscripcion_taller SET nota_taller = ? WHERE idtaller = ? AND dni = ?";
   db.query(query, [nota_taller, idtaller, dni], (err, result) => {
@@ -288,7 +287,7 @@ const insertNotaAlumno = (req, res) => {
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: 'No se encontró la inscripción del alumno' });
     }
-    res.status(200).json({ mensaje: 'Nota del alumno actualizada correctamente' });
+    res.status(200).json({ mensaje: 'Nota del alumno actualizada correctamente', nota_taller });
   });
 }; 
 
