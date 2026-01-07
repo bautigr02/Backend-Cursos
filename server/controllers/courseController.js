@@ -47,6 +47,22 @@ const deleteCurso = (req, res) => {
   });
 };
 
+const desactivarCurso = (req, res) => {
+  const {id}  = req.params;
+  const query = 'UPDATE CURSO SET estado = 4 WHERE idcurso = ? and estado = 1 and fec_ini > CURRENT_DATE'; // 4 es cancelado
+  db.query(query, [id], (err, result) => {
+    if (err) {
+      console.error('Error al cancelar el curso:', err);
+      return res.status(500).json({error: 'Error al cancelar el curso'});
+    }
+    if (result.affectedRows === 0) {
+      return res.status(404).json({error: 'Curso no encontrado'});
+    }
+    res.status(200).json({message: 'Curso cancelado correctamente'});
+      console.log('Curso cancelado con ID:', id);
+    });
+  };
+
 // PUT (actualizar todo el curso)
 const putCurso = (req, res) => {
   const { id } = req.params;
@@ -189,4 +205,4 @@ const createCurso = (req, res) => {
   });
 };
 
-module.exports = { getCursos, getCursoById, createCurso, deleteCurso, putCurso, patchCurso};
+module.exports = { getCursos, getCursoById, createCurso, deleteCurso, desactivarCurso, putCurso, patchCurso};
