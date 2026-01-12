@@ -73,7 +73,7 @@ const getTalleresByCurso = (req, res) => {
 // CREATE
 const createTaller = (req, res) => {
   const { idcurso, nom_taller, fecha, tematica, herramienta, hora_ini, requisitos, dificultad, dni_docente, imagen } = req.body;
-  if (!idcurso || !nom_taller || !fecha || !tematica || !herramienta || !hora_ini || !requisitos || !dificultad || !dni_docente) {
+  if (!idcurso || !nom_taller || !fecha || !tematica || !herramienta || !hora_ini || !requisitos || dificultad === undefined || dificultad === null || !dni_docente) {
     return res.status(400).json({ error: 'Faltan datos obligatorios' });
   }
   const difVal = Number(dificultad);
@@ -97,21 +97,22 @@ const createTaller = (req, res) => {
     if (status === 'out-of-range') {
       return res.status(400).json({ error: 'La fecha del taller debe estar dentro del rango de fechas del curso' });
     }
-  const query = `
-    INSERT INTO taller 
-    (idcurso, nom_taller, fecha, tematica, herramienta, hora_ini, requisitos, dificultad, dni_docente, imagen)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `;
-  db.query(query, [idcurso, nom_taller, fecha, tematica, herramienta, hora_ini, requisitos, dificultad, dni_docente, imagen], (err, result) => {
-    if (err) {
-      console.error('Error al crear el taller:', err);
-      return res.status(500).json({ error: 'Error al crear el taller' });
-    }
-    res.status(201).json({ idtaller: result.insertId, idcurso, nom_taller, fecha, tematica, herramienta, hora_ini, requisitos, dificultad, dni_docente, imagen });
-    console.log('Taller creado correctamente con ID:', result.insertId);
-  });
-  });
-};
+    //Dentro del validate para que solo se ejecute si pasa las validaciones
+    const query = `
+      INSERT INTO taller 
+      (idcurso, nom_taller, fecha, tematica, herramienta, hora_ini, requisitos, dificultad, dni_docente, imagen)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+    db.query(query, [idcurso, nom_taller, fecha, tematica, herramienta, hora_ini, requisitos, difVal, dni_docente, imagen], (err, result) => {
+      if (err) {
+        console.error('Error al crear el taller:', err);
+        return res.status(500).json({ error: 'Error al crear el taller' });
+      }
+      res.status(201).json({ idtaller: result.insertId, idcurso, nom_taller, fecha, tematica, herramienta, hora_ini, requisitos, dificultad: difVal, dni_docente, imagen });
+      console.log('Taller creado correctamente con ID:', result.insertId);
+    });
+    });
+  };
 
 // DELETE
 const deleteTaller = (req, res) => {

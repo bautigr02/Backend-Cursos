@@ -47,6 +47,22 @@ const deleteCurso = (req, res) => {
   });
 };
 
+const desactivarCurso = (req, res) => {
+  const {id}  = req.params;
+  const query = 'UPDATE CURSO SET estado = 4 WHERE idcurso = ? and estado = 1 and fec_ini > CURRENT_DATE'; // 4 es cancelado
+  db.query(query, [id], (err, result) => {
+    if (err) {
+      console.error('Error al cancelar el curso:', err);
+      return res.status(500).json({error: 'Error al cancelar el curso'});
+    }
+    if (result.affectedRows === 0) {
+      return res.status(404).json({error: 'Curso no encontrado'});
+    }
+    res.status(200).json({message: 'Curso cancelado correctamente'});
+      console.log('Curso cancelado con ID:', id);
+    });
+  };
+
 // PUT (actualizar todo el curso)
 const putCurso = (req, res) => {
   const { id } = req.params;
@@ -161,8 +177,8 @@ const createCurso = (req, res) => {
   if (!nom_curso || !fec_ini || !fec_fin || !estado || !num_aula || !dni_docente) {
     return res.status(400).json({ error: 'Faltan datos obligatorios' });
   }
-  const fechaInicio = new Date(fec_ini);
-  const fechaFin = new Date(fec_fin);
+  const fechaInicio = new Date(fec_ini + 'T00:00:00');
+  const fechaFin = new Date(fec_fin + 'T00:00:00');
   const hoy = new Date();
   hoy.setHours(0, 0, 0, 0);
 
@@ -189,4 +205,4 @@ const createCurso = (req, res) => {
   });
 };
 
-module.exports = { getCursos, getCursoById, createCurso, deleteCurso, putCurso, patchCurso};
+module.exports = { getCursos, getCursoById, createCurso, deleteCurso, desactivarCurso, putCurso, patchCurso};
