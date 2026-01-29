@@ -205,4 +205,25 @@ const createCurso = (req, res) => {
   });
 };
 
-module.exports = { getCursos, getCursoById, createCurso, deleteCurso, desactivarCurso, putCurso, patchCurso};
+const cambiarEstadoCurso = (req, res) => {
+  const { id } = req.params;
+  const { nuevo_estado } = req.body;
+
+  if (!nuevo_estado) {
+    return res.status(400).json({ error: 'El nuevo estado es obligatorio' });
+  }
+  
+  const query = 'UPDATE curso SET estado = ? WHERE idcurso = ?';
+  db.query(query, [nuevo_estado, id], (err, result) => {
+    if (err) {
+      console.error('Error al cambiar el estado del curso:', err);
+      return res.status(500).json({ error: 'Error al cambiar el estado del curso' });
+    }
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Curso no encontrado' });
+    }
+    res.status(200).json({ message: 'Estado del curso actualizado correctamente' });
+    console.log('Estado del curso actualizado con ID:', id);
+  });
+}
+module.exports = { getCursos, getCursoById, createCurso, deleteCurso, desactivarCurso, putCurso, patchCurso, cambiarEstadoCurso };
