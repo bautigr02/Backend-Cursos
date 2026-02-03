@@ -61,6 +61,14 @@ const desactivarCurso = (req, res) => {
     res.status(200).json({message: 'Curso cancelado correctamente'});
       console.log('Curso cancelado con ID:', id);
     });
+    const queryInscripciones = 'UPDATE inscripcion_curso SET estado = 4 WHERE idcurso = ? and estado = 1'; // 4 es cancelado
+    db.query(queryInscripciones, [id], (err, result) => {
+      if (err) {
+        console.error('Error al actualizar inscripciones del curso cancelado:', err);
+        return res.status(500).json({error: 'Error al actualizar inscripciones del curso cancelado'});
+      }
+      console.log('Inscripciones del curso cancelado actualizadas con IDcurso:', id);
+    });
   };
 
 // PUT (actualizar todo el curso)
