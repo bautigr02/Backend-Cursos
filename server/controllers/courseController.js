@@ -60,7 +60,7 @@ const desactivarCurso = (req, res) => {
     }
     res.status(200).json({message: 'Curso cancelado correctamente'});
       console.log('Curso cancelado con ID:', id);
-    });
+  
     const queryInscripciones = 'UPDATE inscripcion_curso SET estado = 4 WHERE idcurso = ? and estado = 1'; // 4 es cancelado
     db.query(queryInscripciones, [id], (err, result) => {
       if (err) {
@@ -68,8 +68,19 @@ const desactivarCurso = (req, res) => {
         return res.status(500).json({error: 'Error al actualizar inscripciones del curso cancelado'});
       }
       console.log('Inscripciones del curso cancelado actualizadas con IDcurso:', id);
+    
+      const queryInscripcionesTaller = 'UPDATE inscripcion_taller set estado = 2 WHERE idcurso = ? and estado = 1'; // 2 es cancelado
+      db.query(queryInscripcionesTaller, [id], (err, result) => {
+        if (err) {
+          console.error('Error al actualizar inscripciones a talleres del curso cancelado:', err);
+          return res.status(500).json({error: 'Error al actualizar inscripciones a talleres del curso cancelado'});
+        }
+        console.log('Inscripciones a talleres del curso cancelado actualizadas con IDcurso:', id);
+        res.status(200).json({message: 'Curso e inscripciones canceladas correctamente'});
+      });
     });
-  };
+  });
+};
 
 // PUT (actualizar todo el curso)
 const putCurso = (req, res) => {
@@ -245,6 +256,8 @@ const cambiarEstadoCurso = async () => {
 
       if (curso.estado !== nuevo_estado) {
         await queryPromise('UPDATE curso SET estado = ? WHERE idcurso = ?', [nuevo_estado, curso.idcurso]);  
+
+        await queryPromise('UPDATE inscripcion_curso SET estado = ? WHERE idcurso = ? AND estado <> 4', [nuevo_estado, curso.idcurso]);
       }
     }
     console.log("Estados de cursos actualizados correctamente.");

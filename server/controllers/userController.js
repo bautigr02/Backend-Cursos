@@ -223,7 +223,7 @@ const deleteAlumno = (req, res) => {
 const getCursosByAlumno = (req, res) => {
   const dni = req.params.dni;
   const sql = `
-    SELECT c.idcurso, c.nom_curso, c.descripcion, c.fec_ini, c.fec_fin, c.estado, c.imagen, i.fec_inscripcion, i.estado, i.nota_curso, d.nombre AS nombre_docente, d.apellido AS apellido_docente
+    SELECT c.idcurso, c.nom_curso, c.descripcion, c.fec_ini, c.fec_fin, c.estado as estado_curso, c.imagen, i.fec_inscripcion, i.estado as estado_inscripcion, i.nota_curso, d.nombre AS nombre_docente, d.apellido AS apellido_docente
     FROM inscripcion_curso i
     JOIN curso c ON i.idcurso = c.idcurso
     JOIN docente d ON c.dni_docente = d.dni
@@ -245,7 +245,7 @@ const getTalleresByAlumno = (req, res) => {
     SELECT t.idtaller, t.nom_taller, t.fecha, t.tematica, t.herramienta, t.hora_ini, t.requisitos, t.dificultad, t.dni_docente, t.imagen, t.idcurso, it.fec_inscripcion, it.estado, it.nota_taller
     FROM inscripcion_taller it
     JOIN taller t ON it.idtaller = t.idtaller
-    WHERE it.dni = ?
+    WHERE it.dni = ? AND it.estado = 1 -- Solo mostrar talleres con estado "1" (inscripto) para el alumno;
   `;
   db.query(sql, [dni], (err, results) => {
     if (err) {
@@ -256,7 +256,7 @@ const getTalleresByAlumno = (req, res) => {
   });
 };
 
-// Controlador para cancelar inscripción a un curso (Cambiar estado a "3") y cancelar talleres asociados
+// Controlador para cancelar inscripción a un curso (Cambiar estado a "4") y cancelar talleres asociados
 const cancelarInscripcionCurso = (req, res) => {
   const { dni, idcurso } = req.params;
 
@@ -273,12 +273,12 @@ const cancelarInscripcionCurso = (req, res) => {
     }
 
     const estadoActual = cursoResults[0].estado;
-    if (estadoActual === 3) {
+    if (estadoActual === 4) {
       return res.status(400).json({ error: 'La inscripción ya está cancelada' });
     }
 
     // Primero cancelamos la inscripción al curso
-    const cancelCursoSql = `UPDATE inscripcion_curso SET estado = 3, nota_curso = NULL WHERE dni = ? AND idcurso = ?`;
+    const cancelCursoSql = `UPDATE inscripcion_curso SET estado = 4, nota_curso = NULL WHERE dni = ? AND idcurso = ?`;
     db.query(cancelCursoSql, [dni, idcurso], (err, cursoResult) => {
       if (err) {
         console.error('Error al cancelar inscripción al curso:', err);
@@ -289,10 +289,10 @@ const cancelarInscripcionCurso = (req, res) => {
         return res.status(404).json({ error: 'No se encontró la inscripción al curso' });
       }
 
-      // Ahora cancelamos todas las inscripciones a talleres del mismo curso
+      // Ahora cancelamos todas las inscripciones a talleres del mismo curso (estado = 2)
       const cancelTalleresSql = `
         UPDATE inscripcion_taller 
-        SET estado = 3, nota_taller = NULL 
+        SET estado = 2, nota_taller = NULL 
         WHERE dni = ? AND idcurso = ? AND estado IN (1, 2)
       `;
       
@@ -322,7 +322,7 @@ const cancelarInscripcionCurso = (req, res) => {
   });
 };
 
-// Controlador para inscribir alumno en un curso, si el estado actual es 3, cambiarlo a 1
+// Controlador para inscribir alumno en un curso, si el estado actual es 4, cambiarlo a 1
 const inscribirAlumnoEnCurso = (req, res) => {
   const dniFromToken = req.user?.dni;
   const { dni: dniFromBody, idcurso } = req.body;
@@ -367,8 +367,8 @@ const inscribirAlumnoEnCurso = (req, res) => {
       } else {
         // Si existe, verificamos el estado
         const estadoActual = results[0].estado;
-        if (estadoActual === 3) {
-          // Si el estado es 3, lo cambiamos a 1
+        if (estadoActual === 4) {
+          // Si el estado es 4, lo cambiamos a 1
           const updateSql = `UPDATE inscripcion_curso SET estado = 1, fec_inscripcion = NOW() WHERE dni = ? AND idcurso = ?`;
           db.query(updateSql, [dni, idcurso], (err, result) => {
             if (err) {
@@ -479,8 +479,8 @@ const inscribirAlumnoEnTaller = (req, res) => {
             } else {
               // Si existe, verificamos el estado
               const estadoActual = tallerResults[0].estado;
-              if (estadoActual === 3) {
-                // Si el estado es 3 (cancelado), lo cambiamos a 1
+              if (estadoActual === 2) {
+                // Si el estado es 2 (cancelado), lo cambiamos a 1
                 const updateSql = `UPDATE inscripcion_taller SET estado = 1, fec_inscripcion = NOW(), nota_taller = NULL WHERE dni = ? AND idtaller = ? AND idcurso = ?`;
                 db.query(updateSql, [dni, idtaller, idcurso], (err, result) => {
                   if (err) {
@@ -500,7 +500,7 @@ const inscribirAlumnoEnTaller = (req, res) => {
   });
 };
 
-// Controlador para cancelar inscripción a un taller (Cambiar estado a "3"). Obtener idcurso desde idtaller
+// Controlador para cancelar inscripción a un taller (Cambiar estado a "2"). Obtener idcurso desde idtaller
 const cancelarInscripcionTaller = (req, res) => {
   const { dni, idtaller } = req.params;
 
@@ -518,7 +518,7 @@ const cancelarInscripcionTaller = (req, res) => {
 
     const idcurso = results[0].idcurso;
 
-    const sql = `UPDATE inscripcion_taller SET estado = 3, nota_taller = NULL WHERE dni = ? AND idtaller = ? AND idcurso = ?`;
+    const sql = `UPDATE inscripcion_taller SET estado = 2, nota_taller = NULL WHERE dni = ? AND idtaller = ? AND idcurso = ?`;
 
     db.query(sql, [dni, idtaller, idcurso], (err, result) => {
       if (err) {
