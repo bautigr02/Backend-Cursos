@@ -115,6 +115,9 @@ const updateDocente = async (req, res) => {
   const dni = req.params.dni;
   const { direccion, email, telefono, contrasena } = req.body;
 
+  if (req.user.dni != req.params.dni) {
+    return res.status(403).json({ error: 'No puedes editar el perfil de otro docente' });
+  }
   if (!direccion || !email || !telefono || !contrasena) {
     return res.status(400).json({ error: 'Faltan campos obligatorios' });
   }
@@ -136,7 +139,9 @@ const updateDocente = async (req, res) => {
 const updateDocentePatch = async (req, res) => {
   const dni = req.params.dni;
   const campos = req.body;
-
+  if (req.user.dni != req.params.dni) {
+      return res.status(403).json({ error: 'No puedes editar el perfil de otro docente' });
+  }
   if (Object.keys(campos).length === 0) {
       return res.status(400).json({ error: 'No se proporcionaron campos para actualizar' });
   }

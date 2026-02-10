@@ -97,7 +97,9 @@ const updateAlumno = async (req, res) => {
 
 const updateAlumnoPatch = async (req, res) => {
     const { dni } = req.params;
-
+    if (req.user.rol === 'alumno' && req.user.dni != dni) {
+        return res.status(403).json({ error: 'No tienes permiso para actualizar este alumno' });
+    }
     try {
         const result = await UserRepository.updateAlumnoPatch(dni, req.body);
         if (result.affectedRows === 0) return res.status(404).json({ mensaje: 'Alumno no encontrado' });
@@ -150,6 +152,9 @@ const deleteAlumno = async (req, res) => {
 // Controlador para obtener cursos por DNI del alumno
 const getCursosByAlumno = async (req, res) => {
   const {dni} = req.params;
+  if (req.user.dni != dni && req.user.rol !== 'docente') {
+    return res.status(403).json({ error: 'No tienes permiso para ver esta información' });
+  }
   try {
     const respuesta = await UserRepository.getCursosByAlumno(dni);
     if (!respuesta || respuesta.length === 0) {
@@ -165,6 +170,9 @@ const getCursosByAlumno = async (req, res) => {
 // Controlador para obtener talleres por DNI del alumno
 const getTalleresByAlumno = async (req, res) => {
   const {dni} = req.params;
+  if (req.user.dni != dni && req.user.rol !== 'docente') {
+    return res.status(403).json({ error: 'No tienes permiso para ver esta información' });
+  }
   try {
     const respuesta = await UserRepository.getTalleresByAlumno(dni);
     if (!respuesta) {
@@ -204,7 +212,7 @@ const cancelarInscripcionCurso = async (req, res) => {
 
 // Controlador para inscribir alumno en un curso, si el estado actual es 4, cambiarlo a 1
 const inscribirAlumnoEnCurso = async (req, res) => {
-  const dni = req.user?.dni || req.body.dni;
+  const dni = req.user.dni
   const { idcurso } = req.body;
   try {
       const esDocente = await UserRepository.checkIfDocente(dni);
@@ -230,7 +238,7 @@ const inscribirAlumnoEnCurso = async (req, res) => {
 
 // Controlador para inscribir alumno en un taller. Verificar inscripción al curso primero
 const inscribirAlumnoEnTaller = async (req, res) => {
-  const dni = req.user?.dni || req.body.dni;
+    const dni = req.user.dni
     const { idtaller } = req.body;
 
     try {
