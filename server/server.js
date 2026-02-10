@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const {cambiarEstadoCurso} = require('./controllers/courseController');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -26,6 +27,23 @@ app.use('/api', workshopRoutes);
 //Servidor
 app.listen(port, () => {
   console.log(`Servidor corriendo en http://localhost:${port}`);
+  cambiarEstadoCurso()
+  .then(() => {
+    console.log('Estado de los cursos e inscripciones actualizados al iniciar el servidor.');
+  })
+  .catch((error) => {
+    console.error('Error al actualizar el estado de los cursos/inscripciones:', error);
+  });
+
+  setInterval(() => {
+    cambiarEstadoCurso()
+    .then(() => {
+      console.log('Estado de los cursos e inscripciones actualizados.');
+    })
+    .catch((error) => {
+      console.error('Error al actualizar el estado de los cursos/inscripciones:', error);
+    });
+  }, 86400000); // 24 horas en milisegundos
 });
 
 app.get('/', (req, res) => {
