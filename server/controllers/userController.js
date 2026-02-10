@@ -50,9 +50,10 @@ const loginAlumno = async (req, res) => {
     const payload = {
       dni: alumno.dni,
       email: alumno.email,
-      nombre: alumno.nombre_alumno
+      nombre: alumno.nombre_alumno,
+      rol: 'alumno'
     };
-    const token = jwt.sign(payload, SECRET_KEY, { expiresIn: '1h' });
+    const token = jwt.sign(payload, SECRET_KEY, { expiresIn: '30m' });
 
     res.status(200).json({
       message: 'Login exitoso',
@@ -75,6 +76,10 @@ const loginAlumno = async (req, res) => {
 const updateAlumno = async (req, res) => {
     const { dni } = req.params;
     const { direccion, email, telefono, contrasena } = req.body;
+
+    if (req.user.rol === 'alumno' && req.user.dni !== req.params.dni) {
+      return res.status(403).json({ error: 'No tienes permiso para actualizar este alumno' });
+    }
 
     if (!direccion || !email || !telefono || !contrasena) {
         return res.status(400).json({ error: 'Faltan campos obligatorios' });
@@ -107,8 +112,10 @@ const updateAlumnoPatch = async (req, res) => {
 //Obtener datos del alumno por DNI
 const getAlumnoByDni = async (req, res) => {
   const {dni} = req.params;
+  if (req.user.rol === 'alumno' && req.user.dni != dni) {
+    return res.status(403).json({ error: 'No tienes permiso para ver datos ajenos.' });
+  }
   try {
-  
     const respuesta = await UserRepository.getAlumnoByDni(dni);
     if (!respuesta) {
       return res.status(404).json({ mensaje: 'Alumno no encontrado' });
@@ -123,6 +130,10 @@ const getAlumnoByDni = async (req, res) => {
 // Controlador para eliminar alumno por DNI
 const deleteAlumno = async (req, res) => {
   const {dni} = req.params;
+
+  if (req.user.rol === 'alumno' && req.user.dni !== req.params.dni) {
+    return res.status(403).json({ error: 'No tienes permiso para eliminar este alumno' });
+  }
   try {
     const respuesta = await UserRepository.deleteAlumno(dni);
     if (respuesta.affectedRows === 0) {

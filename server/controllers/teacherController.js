@@ -17,7 +17,7 @@ const loginDocente = async (req, res) => {
     }
 
     const payload = { dni: resultado.dni, email: resultado.email, nombre: resultado.nombre };
-    const token = jwt.sign(payload, SECRET_KEY, { expiresIn: '1h' });
+    const token = jwt.sign(payload, SECRET_KEY, { expiresIn: '30m' });
     res.status(200).json({ message: 'Login exitoso',
       token,
       user: { dni: resultado.dni,
@@ -26,7 +26,8 @@ const loginDocente = async (req, res) => {
       telefono: resultado.telefono,
       direccion: resultado.direccion,
       email: resultado.email,
-      fecha_nacimiento: resultado.fecha_nacimiento}
+      rol: 'docente',
+      }
      });
   }catch (error) {
     console.error('Error al verificar las credenciales:', error);
