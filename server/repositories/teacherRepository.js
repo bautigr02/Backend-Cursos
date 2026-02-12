@@ -113,7 +113,7 @@ const TeacherRepository = {
     },
 
     getTalleresByCursoId: (idcurso) => {
-        const query = "Select idtaller, nom_taller, fecha, hora_ini from taller where idcurso = ?";
+        const query = "Select idtaller, nom_taller, fecha, hora_ini, tematica, requisitos, herramienta from taller where idcurso = ?";
         return new Promise ((resolve, reject)=> {
             db.query(query, [idcurso], (err, results) => {
                 if (err) {

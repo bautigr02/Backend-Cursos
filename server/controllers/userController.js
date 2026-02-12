@@ -65,6 +65,7 @@ const loginAlumno = async (req, res) => {
         telefono: alumno.telefono,
         direccion: alumno.direccion,
         email: alumno.email,
+        rol: 'alumno'
       }
     });
   } catch (err) {

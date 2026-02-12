@@ -23,7 +23,7 @@ const WorkshopRepository = {
     },
 
     getTallerById: (id) => {
-        const query = 'SELECT * FROM taller WHERE idtaller = ?';
+        const query = 'SELECT t.*, c.estado as estado_curso FROM taller t INNER JOIN curso c on t.idcurso = c.idcurso WHERE idtaller = ?';
         return new Promise((resolve, reject) => {
             db.query(query, [id], (err, results) => err ? reject(err) : resolve(results[0]));
         });

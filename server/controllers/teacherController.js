@@ -16,7 +16,7 @@ const loginDocente = async (req, res) => {
       return res.status(400).json({ error: 'Contraseña incorrecta' });
     }
 
-    const payload = { dni: resultado.dni, email: resultado.email, nombre: resultado.nombre };
+    const payload = { dni: resultado.dni, email: resultado.email, nombre: resultado.nombre, rol: 'docente' };
     const token = jwt.sign(payload, SECRET_KEY, { expiresIn: '30m' });
     res.status(200).json({ message: 'Login exitoso',
       token,
@@ -264,8 +264,8 @@ const getNotasByAlumnoInCurso = async (req, res) => {
 
 // insert calification of a student into inscripcion_Curso
 const insertNotaCursoAlumno = async (req, res) => {
-  const { idcurso } = req.params;  
-  const { dni, notaCurso } = req.body;
+  const { idcurso, dni } = req.params;  
+  const { notaCurso } = req.body;
   if (isNaN(notaCurso) || notaCurso < 0 || notaCurso > 10){
     return res.status(400).json({ error: 'La nota debe ser un número entre 0 y 10' });
   }

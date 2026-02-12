@@ -3,13 +3,13 @@ const db = require('../models/db');
 const CourseRepository = {
 
     getCursos: () => {
-        const query = 'SELECT curso.*, aula.cant_alumnos, (SELECT COUNT(*) FROM inscripcion_curso i WHERE i.idcurso = curso.idcurso) AS cantidad_inscriptos FROM curso JOIN aula ON curso.num_aula = aula.num_aula';
+        const query = 'SELECT curso.*, aula.cant_alumnos, (SELECT COUNT(*) FROM inscripcion_curso i WHERE i.idcurso = curso.idcurso and i.estado IN (1, 2, 3)) AS cantidad_inscriptos FROM curso JOIN aula ON curso.num_aula = aula.num_aula';
         return new Promise((resolve, reject) => {
             db.query(query, (err, results) => err ? reject(err) : resolve(results));
         });
     },
     getCursoById: (id) => {
-        const query = 'SELECT * FROM curso WHERE idcurso = ?';
+        const query = 'SELECT curso.*, docente.email as email_docente FROM curso INNER JOIN docente ON curso.dni_docente = docente.dni WHERE idcurso = ?';
         return new Promise((resolve, reject) => {
             db.query(query, [id], (err, results) => err ? reject(err) : resolve(results[0]));
         });
