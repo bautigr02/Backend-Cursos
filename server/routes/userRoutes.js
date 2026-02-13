@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const verifyJWT = require('../middleware/verifyJWT');
+const authorize = require('../middleware/roleAuth');
+
 const {createAlumno} = require('../controllers/userController');
 const { loginAlumno } = require('../controllers/userController');
 const {updateAlumno} = require('../controllers/userController');
@@ -16,14 +18,14 @@ const { cancelarInscripcionTaller } = require('../controllers/userController');
 
 router.post('/login', loginAlumno);
 router.post('/alumno', createAlumno);
-router.put('/alumno/:dni', verifyJWT, updateAlumno);
-router.patch('/alumno/:dni', verifyJWT, updateAlumnoPatch);
-router.get('/alumno/:dni', verifyJWT, getAlumnoByDni);
-router.delete('/alumno/:dni', verifyJWT, deleteAlumno);
-router.get('/alumno/:dni/cursos', verifyJWT, getCursosByAlumno);
-router.patch('/inscripcion_curso/:dni/:idcurso', verifyJWT, cancelarInscripcionCurso);
-router.get('/alumno/:dni/talleres', verifyJWT, getTalleresByAlumno);
-router.post('/inscripcion_curso', verifyJWT, inscribirAlumnoEnCurso);
-router.post('/inscripcion_taller', verifyJWT, inscribirAlumnoEnTaller);
-router.patch('/inscripcion_taller/:dni/:idtaller', verifyJWT, cancelarInscripcionTaller);
+router.put('/alumno/:dni', verifyJWT, authorize(['alumno']), updateAlumno);
+router.patch('/alumno/:dni', verifyJWT, authorize(['alumno']), updateAlumnoPatch);
+router.get('/alumno/:dni', verifyJWT, authorize(['alumno', 'docente']), getAlumnoByDni);
+router.delete('/alumno/:dni', verifyJWT, authorize(['alumno']), deleteAlumno);
+router.get('/alumno/:dni/cursos', verifyJWT, authorize(['alumno', 'docente']), getCursosByAlumno);
+router.patch('/inscripcion_curso/:dni/:idcurso',verifyJWT,authorize(['alumno']) ,cancelarInscripcionCurso);
+router.get('/alumno/:dni/talleres', verifyJWT, authorize(['alumno', 'docente']), getTalleresByAlumno);
+router.post('/inscripcion_curso', verifyJWT, authorize(['alumno']), inscribirAlumnoEnCurso);
+router.post('/inscripcion_taller', verifyJWT, authorize(['alumno']), inscribirAlumnoEnTaller);
+router.patch('/inscripcion_taller/:dni/:idtaller', verifyJWT, authorize(['alumno']), cancelarInscripcionTaller);
 module.exports = router;
