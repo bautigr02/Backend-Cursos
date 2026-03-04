@@ -1,4 +1,4 @@
-// Unit test for CourseRepository - mocks `models/db` to avoid real DB connection
+// Tests unitarios para CourseRepository - mockea `models/db` para evitar conexión real a la base de datos
 jest.mock('../models/db', () => ({ query: jest.fn() }));
 
 const db = require('../models/db');
@@ -9,7 +9,7 @@ describe('CourseRepository (unit)', () => {
     jest.clearAllMocks();
   });
 
-  test('getCursoById resolves with single curso object', async () => {
+  test('getCursoById resuelve con un objeto curso único', async () => {
     const fakeResult = [{ idcurso: 1, nom_curso: 'Test' }];
     db.query.mockImplementation((query, params, cb) => cb(null, fakeResult));
 
@@ -18,7 +18,7 @@ describe('CourseRepository (unit)', () => {
     expect(db.query).toHaveBeenCalled();
   });
 
-  test('getCursos resolves with array of cursos', async () => {
+  test('getCursos resuelve con un array de cursos', async () => {
     const fakeResults = [{ idcurso: 1 }, { idcurso: 2 }];
     db.query.mockImplementation((query, cb) => cb(null, fakeResults));
 
@@ -27,7 +27,7 @@ describe('CourseRepository (unit)', () => {
     expect(cursos).toHaveLength(2);
   });
 
-  test('getCursoById rejects when db returns error', async () => {
+  test('getCursoById rechaza la promesa cuando la BD devuelve error', async () => {
     db.query.mockImplementation((query, params, cb) => cb(new Error('DB error')));
     await expect(CourseRepository.getCursoById(999)).rejects.toThrow('DB error');
   });
