@@ -1,0 +1,5 @@
+[phases.build]
+cmds = ["echo 'Skipping frontend build'"]
+
+[start]
+cmd = "node server/server.js"
