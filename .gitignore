@@ -5,6 +5,7 @@
 /tmp
 /out-tsc
 /bazel-out
+/build
 
 # Node
 /node_modules
@@ -44,3 +45,5 @@ Thumbs.db
 # Local env files
 .env
 server/.env
+.env.local
+.env.production
