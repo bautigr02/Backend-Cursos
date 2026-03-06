@@ -1,0 +1,8 @@
+{
+  "build": {
+    "buildCommand": "npm ci"
+  },
+  "deploy": {
+    "startCommand": "node server/server.js"
+  }
+}
